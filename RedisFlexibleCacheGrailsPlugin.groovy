@@ -44,7 +44,7 @@ any kind of Serializable object. This plugin is inspired by both but is not base
     def developers = [[name: "Germán Sancho", email: "german@gametube.org"]]
 
     // Location of the plugin's issue tracker.
-//    def issueManagement = [ system: "JIRA", url: "http://jira.grails.org/browse/GPMYPLUGIN" ]
+    def issueManagement = [ system: "GITHUB", url: "https://github.com/tamershahin/redis-flexible-cache/issues" ]
 
     // Online location of the plugin's browseable source code.
     def scm = [ url: "https://github.com/tamershahin/Redis-Flexible-Cache" ]
