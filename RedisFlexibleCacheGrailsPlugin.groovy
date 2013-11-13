@@ -1,12 +1,25 @@
-import org.gametube.dmg.core.cache.RedisFlexibleCachingService
-import org.gametube.dmg.core.cache.serializer.RedisFlexibleDeserializer
-import org.gametube.dmg.core.cache.serializer.RedisFlexibleSerializer
+/*
+ * Copyright 2006-2013 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import org.gametube.redisflexiblecache.RedisFlexibleCachingService
+import org.gametube.redisflexiblecache.RedisFlexibleDeserializer
+import org.gametube.redisflexiblecache.RedisFlexibleSerializer
 import org.springframework.core.serializer.DefaultSerializer
 import org.springframework.core.serializer.support.DeserializingConverter
 import org.springframework.core.serializer.support.SerializingConverter
-import redis.clients.jedis.JedisPool
-import redis.clients.jedis.JedisPoolConfig
-import redis.clients.jedis.Protocol
 
 //import redis.clients.jedis.JedisPool
 //import redis.clients.jedis.JedisSentinelPool
@@ -44,10 +57,10 @@ any kind of Serializable object. This plugin is inspired by both but is not base
     def developers = [[name: "Germán Sancho", email: "german@gametube.org"]]
 
     // Location of the plugin's issue tracker.
-    def issueManagement = [ system: "GITHUB", url: "https://github.com/tamershahin/redis-flexible-cache/issues" ]
+    def issueManagement = [system: "GITHUB", url: "https://github.com/tamershahin/redis-flexible-cache/issues"]
 
     // Online location of the plugin's browseable source code.
-    def scm = [ url: "https://github.com/tamershahin/redis-flexible-cache" ]
+    def scm = [url: "https://github.com/tamershahin/redis-flexible-cache"]
 
     def doWithWebDescriptor = { xml ->
         // TODO Implement additions to web.xml (optional), this event occurs before
@@ -55,13 +68,8 @@ any kind of Serializable object. This plugin is inspired by both but is not base
 
     def doWithSpring = {
         // TODO Implement runtime spring config (optional)
-        def redisCacheConfigMap = mergeConfigMaps(application)
-        configureService.delegate = delegate
-        configureService(redisCacheConfigMap, "")
-        redisCacheConfigMap?.connections?.each { connection ->
-            configureService(connection.value, connection?.key?.capitalize())
-        }
 
+        String connectionToUse = mergeConfigMaps(application)?.connectionToUse?.capitalize()
 
         customSerializer(DefaultSerializer)  //the standard serializer is ok
         customDeserializer(RedisFlexibleDeserializer) //but the standard deserializer is slow, so I use custom one instead
@@ -76,7 +84,7 @@ any kind of Serializable object. This plugin is inspired by both but is not base
 
         redisFlexibleCachingService(RedisFlexibleCachingService) {
             redisFlexibleSerializer = ref('redisFlexibleSerializer')
-            redisService = ref('redisService')
+            redisService = ref('redisService' + connectionToUse)
             grailsApplication = ref('grailsApplication')
         }
     }
@@ -107,9 +115,24 @@ any kind of Serializable object. This plugin is inspired by both but is not base
         // TODO Implement code that is executed when the application shuts down (optional)
     }
 
+    //if the connection specified exist, use it. if there are no connection specified use 'cache'. otherwise use only
+    //base parameters
     def mergeConfigMaps(def application) {
+
+        String connectionToUse = application.config.grails.redisflexiblecache.connectiontouse ?: ""
         def redisConfigMap = application.config.grails.redis ?: [:]
-        redisConfigMap.merge(redisConfigMap.cache)
+
+        if (!redisConfigMap.connections[connectionToUse]) {
+            if (redisConfigMap.connections.cache) {
+                connectionToUse = 'cache'
+            } else { // if connectionToUse and cache connections are not configured don't merge nothing
+                connectionToUse = ''
+            }
+        }
+
+        redisConfigMap.connectionToUse = connectionToUse
+        return redisConfigMap + redisConfigMap.connections[connectionToUse]
+
     }
 
     def addCacheMethods(def mainContext) {
@@ -130,48 +153,8 @@ any kind of Serializable object. This plugin is inspired by both but is not base
 
         def redisCacheConfigMap = mergeConfigMaps(mainContext.grailsApplication)
         redisFlexibleCS.expireMap = redisCacheConfigMap?.expireMap ?: [:]
-        redisFlexibleCS.defaultTTL = redisCacheConfigMap?.defaultTTL ?: [:]
+        redisFlexibleCS.defaultTTL = redisCacheConfigMap?.defaultTTL ?: 0
         redisFlexibleCS.enabled = redisCacheConfigMap?.enabled == false ?: true
     }
 
-    /**
-     * delegate to wire up the required beans.
-     */
-    def configureService = { redisConfigMap, key ->
-        def poolBean = "redisPoolConfig${key}"
-        "${poolBean}"(JedisPoolConfig) {
-            // used to set arbitrary config values without calling all of them out here or requiring any of them
-            // any property that can be set on RedisPoolConfig can be set here
-            redisConfigMap.poolConfig.each { configkey, value ->
-                delegate.setProperty(configkey, value)
-            }
-        }
-
-        def host = redisConfigMap?.host ?: 'localhost'
-        def port = redisConfigMap?.port ?: Protocol.DEFAULT_PORT
-        def timeout = redisConfigMap?.timeout ?: Protocol.DEFAULT_TIMEOUT
-        def password = redisConfigMap?.password ?: null
-        def database = redisConfigMap?.database ?: Protocol.DEFAULT_DATABASE
-        def sentinels = redisConfigMap?.sentinels ?: null
-        def masterName = redisConfigMap?.masterName ?: null
-
-        //TODO: remove comments when using jedis:2.2.0 instead of 2.1.0
-//        // If sentinels and a masterName is present, using different pool implementation
-//        if (sentinels && masterName) {
-//            "redisPool${key}"(JedisSentinelPool, masterName, sentinels as Set, ref(poolBean), timeout, password, database) { bean ->
-//                bean.destroyMethod = 'destroy'
-//            }
-//        } else {
-        "redisPool${key}"(JedisPool, ref(poolBean), host, port, timeout, password, database) { bean ->
-            bean.destroyMethod = 'destroy'
-        }
-//        }
-//
-////        only wire up additional services when key provided for multiple connection support
-//        if (key) {
-//            "redisService${key}"(RedisService) {
-//                redisPool = ref("redisPool${key}")
-//            }
-//        }
-    }
 }
