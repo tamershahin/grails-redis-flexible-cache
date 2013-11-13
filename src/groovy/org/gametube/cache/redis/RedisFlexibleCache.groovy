@@ -12,7 +12,6 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
 @Target([ElementType.METHOD])
 @GroovyASTTransformationClass(['org.gametube.cache.redis.ast.RedisFlexibleCacheASTTransformation'])
 @interface RedisFlexibleCache {
-    Class value() default {true};
     String key() default '';
     String expire() default '';
     String group() default '';
