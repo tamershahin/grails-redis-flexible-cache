@@ -47,7 +47,7 @@ any kind of Serializable object. This plugin is inspired by both but is not base
     def issueManagement = [ system: "GITHUB", url: "https://github.com/tamershahin/redis-flexible-cache/issues" ]
 
     // Online location of the plugin's browseable source code.
-    def scm = [ url: "https://github.com/tamershahin/Redis-Flexible-Cache" ]
+    def scm = [ url: "https://github.com/tamershahin/redis-flexible-cache" ]
 
     def doWithWebDescriptor = { xml ->
         // TODO Implement additions to web.xml (optional), this event occurs before
