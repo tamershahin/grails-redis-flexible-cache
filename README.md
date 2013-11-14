@@ -3,6 +3,7 @@ Grails Flexible Cache Redis Plugin
 
 This plugin is an alternative to [redis-cache-plugin]. It gives the possibility to set the expire time in seconds for every cached key, and provides a service, annotations and injected methods to perform entry caching and eviction.
 The [redis-plugin] plugin also provides the possibility to set a TTL for a cached entry (using the provided `@Memoize` annotation), but the it lacks the option to serialize any kind of Serializable objects (only object ids are cached and then hydrated from main DB). 
+This means that potentially a <b>lot</b> of data will go to redis, so pay attention to memory and bandwith consumption!
 
 This plugin is not an extension of [cache-plugin] plugin, it is far more simple and lighter at the same time.
 The [cache-plugin] gives a deep integration with grails Controller CoC mechanism, but i think it creates too much overhead sometimes.
@@ -49,10 +50,10 @@ Typically, you'd have something like this in your `grails-app/conf/Config.groovy
         }
     }
 
-There are two additional entries in the connection configuration:
+There are two additional entries in the configuration respect a standard redis plugin configuration:
  * `defaultTTL`: indicates the amount of seconds to use as TTL when no other TTL value is provided explicitly
  * `expireMap`: provides names and values (in seconds) for TTL presets that can be used in annotations/method calls 
-
+ * `grails.redisflexiblecache.connectiontouse` : you can say which connection the plugin must use. Can be 'cache' or any other specified. If not found 'cache'is the default one. If there is no 'cache' connection will be used the base one.
 
 Plugin Usage
 ------------
@@ -63,7 +64,7 @@ The plugin can be used in many way, as explained below, but the set of parameter
 In case of storing/retrieving values from the cache the values are:
 
     key               - A unique key for the data cache.
-    group             - A valid key present in expireMap.
+    group             - A valid key present in expireMap defined in Config.groovy.
     expire            - Expire time in ms.  Will default to never so only pass a value like 3600 if you want value to expire.
     reAttachToSession - a bolean to indicate that the plugin must try to reattach any domain class cached to current sessione.
 
@@ -148,7 +149,7 @@ If the compile succeeds but runtime fails or throws an exception, make sure the 
 If the compile does NOT succeed make sure check the stack trace as some validation is done on the AST transform for each annotation type:
   * Required annotation properties are provided.
   * When using `reAttachToSession` it is a valid Bolean.
-  * When using `expire` it is a valid String.
+  * When using `expire` it is a valid <b>String<b> with a numeric value.
   * When using `group` it is a valid String.
   * When using `key` it is a valid String.
 
@@ -162,7 +163,9 @@ Release Notes
 Credits
 =======
 
-This plugin is sponsored by [GameTube].
+This plugin is sponsored by <b>[GameTube]</b>.
+
+Thanks to the authors of [redis-plugin] and [redis-cache-plugin] for excellent code examples and Christian Oestreich for his [guide on groovy AST]
 
 [redis-cache-plugin]: http://www.grails.org/plugin/cache-redis
 [redis-plugin]: http://www.grails.org/plugin/redis
@@ -171,3 +174,4 @@ This plugin is sponsored by [GameTube].
 [redis]: http://redis.io
 [jedis]: https://github.com/xetorthio/jedis/wiki
 [GameTube]: http://www.gametube.org/
+[guide on groovy AST]: http://www.christianoestreich.com/2012/02/groovy-ast-transformations-part-1/
