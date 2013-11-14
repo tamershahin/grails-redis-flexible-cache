@@ -2,10 +2,11 @@ Grails Flexible Cache Redis Plugin
 ==================================
 
 This plugin is an alternative to [redis-cache-plugin]. It gives the possibility to set the expire time in seconds for every cached key, and provides a service, annotations and injected methods to perform entry caching and eviction.
-The [redis-plugin] plugin also provides the possibility to set a TTL for a cached entry (using the provided `@Memoize` annotation), but the it lacks the option to serialize
-any kind of Serializable objects (only object ids are cached and then hydrated from main DB). This plugin is inspired by both but is not based on them.
+The [redis-plugin] plugin also provides the possibility to set a TTL for a cached entry (using the provided `@Memoize` annotation), but the it lacks the option to serialize any kind of Serializable objects (only object ids are cached and then hydrated from main DB). 
+
 This plugin is not an extension of [cache-plugin] plugin, it is far more simple and lighter at the same time.
 The [cache-plugin] gives a deep integration with grails Controller CoC mechanism, but i think it creates too much overhead sometimes.
+
 This plugin is inspired by both but is not based on them.
 
 Installation
@@ -14,7 +15,8 @@ Dependency :
 
     compile ":redis-flexible-cache:0.1" 
 
-In order to access the redis server where cached entries are stored, the plugin uses the configuration of the [redis-plugin]. Typically, you'd have something like this in your `grails-app/conf/Config.groovy` file:
+In order to access the redis server where cached entries are stored, the plugin uses the configuration of the [redis-plugin]. 
+Typically, you'd have something like this in your `grails-app/conf/Config.groovy` file:
 
     grails.redisflexiblecache.connectiontouse = 'cache'
     grails {  // example of configuration
@@ -30,7 +32,7 @@ In order to access the redis server where cached entries are stored, the plugin 
             password = '' // defaults to no password
             connections {
                  cache {
-                 //enabled = false // cache enabled by default
+                     //enabled = false // cache enabled by default
                      database = 2
                      host = 'devserver'  // will override the base one
                      defaultTTL = 10 * 60 // seconds (used only if no ttl are declared in the annotation/map and no expireMap is defined
@@ -47,8 +49,8 @@ In order to access the redis server where cached entries are stored, the plugin 
     }
 
 There are two additional entries in the connection configuration:
-`defaultTTL`: indicates the amount of seconds to use as TTL when no other TTL value is provided explicitly
-`expireMap`: provides names and values (in seconds) for TTL presets that can be used in annotations/method calls 
+ * `defaultTTL`: indicates the amount of seconds to use as TTL when no other TTL value is provided explicitly
+ * `expireMap`: provides names and values (in seconds) for TTL presets that can be used in annotations/method calls 
 
 
 Plugin Usage
@@ -59,8 +61,8 @@ Plugin Usage
     def redisFlexibleCacheService
 
 The `redisFlexibleCacheService` has 2 methods: 
-`doCache`: stores/retrieves an object from the cache using a given key.
-`evictCache` evicts a key and its value from the cache.
+ * `doCache`: stores/retrieves an object from the cache using a given key.
+ * `evictCache` evicts a key and its value from the cache.
 
 This service is a standard Spring bean that can be injected and used in controllers, services, etc.
 
@@ -74,10 +76,11 @@ Example:
                 log.debug('evicted :' + keys);
     })
 
-### Controllers/Services dynamic method ###
+### Controllers/Services dynamic methods ###
 
-At application startup/reaload each Grails controller and service gets injected the two methods provided from redisFlexibleCacheService withe the followeing names:
-`cache` and `evictCache`.
+At application startup/reaload each Grails controller and service gets injected the two methods provided from redisFlexibleCacheService with the following names:
+ * `cache`
+ * `evictCache`
 
 Here is an example of usage:
 
@@ -94,7 +97,9 @@ Here is an example of usage:
 
 ### Annotation ###
 
-It is also possible to use two Annotations on methods to access to cache functionality: `@RedisFlexibleCache` and `@EvictRedisFlexibleCache`. 
+It is also possible to use two Annotations on methods to access to cache functionality: 
+ * `@RedisFlexibleCache`
+ * `@EvictRedisFlexibleCache` 
 
 Here is an example of usage:
     
@@ -134,10 +139,10 @@ Instead you will use the `#` sign to represent a gstring value such as `@EvictRe
 
 During the AST tranformation these will be replaced with the `$` character and will evaluate correctly during runtime as `redisFlexibleCacheService.evictCache("${book.title}:${book.id}"){...}`.
 
-This kind of evaluation is the same of ( and realized thanks to the example of): [redis-plugin-example]
+This kind of evaluation is the same of ( and realized thanks to the example of): [redis-plugin-example], take a look to the link for full details.
 
 If the compile succeeds but runtime fails or throws an exception, make sure the following are valid:
-  * Your key OR value is configured correctly.
+  * Your key is configured correctly.
   * The key uses a #{} for all variables you want referenced.
 
 If the compile does NOT succeed make sure check the stack trace as some validation is done on the AST transform for each annotation type:
