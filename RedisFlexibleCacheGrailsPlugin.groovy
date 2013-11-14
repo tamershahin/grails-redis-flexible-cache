@@ -81,7 +81,7 @@ any kind of Serializable object. This plugin is inspired by both but is not base
             deserializingConverter = ref('deserializingConverter')
         }
 
-        redisFlexibleCachingService(RedisFlexibleCacheService) {
+        redisFlexibleCacheService(RedisFlexibleCacheService) {
             redisFlexibleSerializer = ref('redisFlexibleSerializer')
             redisService = ref('redisService' + connectionToUse)
             grailsApplication = ref('grailsApplication')
@@ -136,7 +136,7 @@ any kind of Serializable object. This plugin is inspired by both but is not base
     // Inject cache and evict methods in controllers and services
     def addCacheMethodsAndLoadConfig(def mainContext) {
 
-        def redisFlexibleCS = mainContext.redisFlexibleCachingService
+        def redisFlexibleCS = mainContext.redisFlexibleCacheService
 
         def clazzes = []
         clazzes += mainContext.grailsApplication.controllerClasses*.clazz

@@ -141,7 +141,7 @@ class RedisFlexibleCacheService {
             result = closure()
             def serializedResult = redisFlexibleSerializer.serialize(result)
             if (serializedResult) redisService.withRedis { Jedis redis ->
-                if (ttl < 0) {
+                if (ttl > 0) {
                     redis.setex(key, ttl, serializedResult)
                 } else {
                     redis.set(key, serializedResult)
