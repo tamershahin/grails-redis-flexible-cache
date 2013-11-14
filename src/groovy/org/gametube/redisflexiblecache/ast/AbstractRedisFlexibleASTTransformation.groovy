@@ -29,12 +29,13 @@ import org.codehaus.groovy.control.messages.SyntaxErrorMessage
 import org.codehaus.groovy.syntax.SyntaxException
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
-import org.gametube.redisflexiblecache.RedisFlexibleCachingService
+import org.gametube.redisflexiblecache.RedisFlexibleCacheService
 
 import static org.springframework.asm.Opcodes.ACC_PRIVATE
 import static org.springframework.asm.Opcodes.ACC_PUBLIC
 
 /**
+ * Abstract AST transformation for annotations provided by the plugin
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 abstract class AbstractRedisFlexibleASTTransformation implements ASTTransformation {
@@ -48,17 +49,17 @@ abstract class AbstractRedisFlexibleASTTransformation implements ASTTransformati
     protected static final String CACHE_SERVICE = 'redisFlexibleCachingService'
 
     void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {
-        //map to hold the params we will pass to the quickCache[?] method
-        def quickCacheProperties = [:]
+        //map to hold the params we will pass to the doCache method
+        def doCacheProperties = [:]
 
         try {
             injectCacheService(sourceUnit)
-            generateQuickCacheProperties(astNodes, sourceUnit, quickCacheProperties)
-            //if the key is missing there is an issue with the annotation
-            if (!quickCacheProperties.containsKey(KEY) || !quickCacheProperties.get(KEY)) {
+            generateDoCacheProperties(astNodes, sourceUnit, doCacheProperties)
+            // if the key is missing there is an issue with the annotation
+            if (!doCacheProperties.containsKey(KEY) || !doCacheProperties.get(KEY)) {
                 return
             }
-            addQuickCachedStatements((MethodNode) astNodes[1], quickCacheProperties)
+            addDoCachedStatements((MethodNode) astNodes[1], doCacheProperties)
             visitVariableScopes(sourceUnit)
         } catch (Exception e) {
             addError("Error during RedisFlexibleCache AST Transformation: ${e}", astNodes[0], sourceUnit)
@@ -67,18 +68,20 @@ abstract class AbstractRedisFlexibleASTTransformation implements ASTTransformati
     }
 
     /**
-     * Create the statements for the quickCached method, clear the node and then readd the quickCached code back to the method.
-     * @param methodNode The MethodNode we will be clearing and replacing with the cacheService.doCache[?] method call with.
-     * @param quickCacheProperties The map of properties to use for the service invocation
+     * Create the statements for the doCache method, clear the node and then readd the doCache code back to the
+     * method.
+     * @param methodNode the methodNode we will be cleared and replaced with the cacheService.doCache method call.
+     * @param doCacheProperties the map of properties to use for the service invocation
      */
-    private void addQuickCachedStatements(MethodNode methodNode, LinkedHashMap quickCacheProperties) {
-        def stmt = quickCacheMethod(methodNode, quickCacheProperties)
+    private void addDoCachedStatements(MethodNode methodNode, LinkedHashMap doCacheProperties) {
+        def stmt = doCacheMethod(methodNode, doCacheProperties)
         methodNode.code.statements.clear()
         methodNode.code.statements.addAll(stmt)
     }
 
     /**
-     * Fix the variable scopes for closures.  Without this closures will be missing the input params being passed from the parent scope.
+     * Fix the variable scopes for closures.  Without this, closures will be missing the input params being passed from
+     * the parent scope.
      * @param sourceUnit The SourceUnit to visit and add the variable scopes.
      */
     private void visitVariableScopes(SourceUnit sourceUnit) {
@@ -89,30 +92,28 @@ abstract class AbstractRedisFlexibleASTTransformation implements ASTTransformati
     }
 
     /**
-     * Determine if the user missed injecting the cacheService into the class with the @QuickCached method.
+     * Determine whether the user missed injecting the cacheService into the class with the @RedisFlexibleCache method.
      * @param sourceUnit SourceUnit to detect and/or inject service into
      */
     private void injectCacheService(SourceUnit sourceUnit) {
         if (!((ClassNode) sourceUnit.AST.classes.toArray()[0]).properties?.any { it?.field?.name == CACHE_SERVICE }) {
-//            println "Adding cacheService to class ${sourceUnit.AST.classes[0].name}."
-            if (!sourceUnit.AST.imports.any { it.className == ClassHelper.make(RedisFlexibleCachingService).name }
-                    && !sourceUnit.AST.starImports.any { it.packageName == "${ClassHelper.make(RedisFlexibleCachingService).packageName}." }) {
-//                println "Adding namespace ${ClassHelper.make(RedisFlexibleCachingService).packageName} to class ${sourceUnit.AST.classes[0].name}."
-                sourceUnit.AST.addImport('RedisFlexibleCachingService', ClassHelper.make(RedisFlexibleCachingService))
+            if (!sourceUnit.AST.imports.any { it.className == ClassHelper.make(RedisFlexibleCacheService).name }
+                    && !sourceUnit.AST.starImports.any { it.packageName == "${ClassHelper.make(RedisFlexibleCacheService).packageName}." }) {
+                sourceUnit.AST.addImport('RedisFlexibleCacheService', ClassHelper.make(RedisFlexibleCacheService))
             }
-            addRedisServiceProperty((ClassNode) sourceUnit.AST.classes.toArray()[0], CACHE_SERVICE)
+            addProperty((ClassNode) sourceUnit.AST.classes.toArray()[0], CACHE_SERVICE)
         }
     }
 
     /**
-     * This method adds a new property to the class. Groovy automatically handles adding the getters and setters so you
-     * don't have to create special methods for those.  This could be reused for other properties.
+     * Add a new property to the class. Groovy automatically handles adding the getters and setters so you
+     * don't have to create special methods for those. This could be reused for other properties.
      * @param cNode Node to inject property onto.  Usually a ClassNode for the current class.
      * @param propertyName The name of the property to inject.
      * @param propertyType The object class of the property. (defaults to Object.class)
      * @param initialValue Initial value of the property. (defaults null)
      */
-    private void addRedisServiceProperty(ClassNode cNode, String propertyName, Class propertyType = java.lang.Object.class, Expression initialValue = null) {
+    private void addProperty(ClassNode cNode, String propertyName, Class propertyType = java.lang.Object.class, Expression initialValue = null) {
         FieldNode field = new FieldNode(
                 propertyName,
                 ACC_PRIVATE,
@@ -125,27 +126,26 @@ abstract class AbstractRedisFlexibleASTTransformation implements ASTTransformati
     }
 
     /**
-     * method to add the key and expires and options if they exist
+     * Add the key and expires and options if they exist
      * @param astNodes the ast nodes
      * @param sourceUnit the source unit
-     * @param quickCacheProperties map to put data in
+     * @param doCacheProperties map to put data in
      * @return
      */
-    protected abstract void generateQuickCacheProperties(ASTNode[] astNodes, SourceUnit sourceUnit, Map quickCacheProperties)
+    protected abstract void generateDoCacheProperties(ASTNode[] astNodes, SourceUnit sourceUnit, Map doCacheProperties)
 
     protected abstract ConstantExpression makeCacheServiceConstantExpression()
 
-    protected abstract ArgumentListExpression makeRedisServiceArgumentListExpression(Map quickCacheProperties)
+    protected abstract ArgumentListExpression makeRedisServiceArgumentListExpression(Map doCacheProperties)
 
-    protected List<Statement> quickCacheMethod(MethodNode methodNode, Map quickCacheProperties) {
+    protected List<Statement> doCacheMethod(MethodNode methodNode, Map doCacheProperties) {
         BlockStatement body = new BlockStatement()
-//        addInterceptionLogging(body, 'quickCached method')
-        addRedisServiceQuickCacheInvocation(body, methodNode, quickCacheProperties)
+        addRedisServiceDoCacheInvocation(body, methodNode, doCacheProperties)
         body.statements
     }
 
-    protected void addRedisServiceQuickCacheInvocation(BlockStatement body, MethodNode methodNode, Map quickCacheProperties) {
-        ArgumentListExpression argumentListExpression = makeRedisServiceArgumentListExpression(quickCacheProperties)
+    protected void addRedisServiceDoCacheInvocation(BlockStatement body, MethodNode methodNode, Map doCacheProperties) {
+        ArgumentListExpression argumentListExpression = makeRedisServiceArgumentListExpression(doCacheProperties)
         argumentListExpression.addExpression(makeClosureExpression(methodNode))
 
         body.addStatement(
@@ -159,14 +159,14 @@ abstract class AbstractRedisFlexibleASTTransformation implements ASTTransformati
         )
     }
 
-    protected void addRedisServiceQuickCacheKeyExpression(Map quickCacheProperties, ArgumentListExpression argumentListExpression) {
-        if (quickCacheProperties.get(KEY).toString().contains(HASH_CODE)) {
+    protected void addRedisServiceDoCacheKeyExpression(Map doCacheProperties, ArgumentListExpression argumentListExpression) {
+        if (doCacheProperties.get(KEY).toString().contains(HASH_CODE)) {
             def ast = new AstBuilder().buildFromString("""
-                "${quickCacheProperties.get(KEY).toString().replace(HASH_CODE, GSTRING).toString()}"
+                "${doCacheProperties.get(KEY).toString().replace(HASH_CODE, GSTRING).toString()}"
            """)
             argumentListExpression.addExpression(ast[0].statements[0].expression)
         } else {
-            argumentListExpression.addExpression(new ConstantExpression(quickCacheProperties.get(KEY).toString()))
+            argumentListExpression.addExpression(new ConstantExpression(doCacheProperties.get(KEY).toString()))
         }
     }
 

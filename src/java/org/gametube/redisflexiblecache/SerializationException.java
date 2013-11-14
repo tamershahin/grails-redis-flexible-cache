@@ -21,8 +21,6 @@ import org.springframework.core.NestedRuntimeException;
 
 /**
  * Generic exception indicating a serialization/deserialization error.
- *
- * @author Tamer Shahin
  */
 public class SerializationException extends NestedRuntimeException {
 

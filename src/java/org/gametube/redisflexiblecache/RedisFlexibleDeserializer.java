@@ -25,8 +25,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 
 /**
- * Custom Deserializer (faster then {@link org.springframework.core.serializer.DefaultDeserializer} )
- * @author Tamer Shahin
+ * Custom Deserializer (faster than {@link org.springframework.core.serializer.DefaultDeserializer} )
  */
 public class RedisFlexibleDeserializer implements Deserializer<Object> {
 

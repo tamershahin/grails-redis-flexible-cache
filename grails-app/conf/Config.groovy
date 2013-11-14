@@ -54,13 +54,13 @@ grails {  // example of configuration
             database = 2
             host = 'localhost'  // will override the base one
             defaultTTL = 10 * 60 // seconds (used only if no ttl are declared in the annotation/map and no expireMap is defined
-            expireMap = [never: Integer.MAX_VALUE, //values in seconds
+            expireMap = [ // values in seconds
+                    never: -1, // negative values mean do not set any TTL
                     low: 10 * 60,
                     mid_low: 5 * 60,
                     mid: 2 * 60,
                     high: 1 * 60
             ]
-
         }
     }
 }

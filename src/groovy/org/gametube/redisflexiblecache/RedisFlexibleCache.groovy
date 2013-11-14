@@ -23,6 +23,7 @@ import java.lang.annotation.Target
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 /**
+ * Annontation for caching an entry into the redis flexible cache
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target([ElementType.METHOD])

@@ -16,14 +16,14 @@
 
 grails.project.work.dir = 'target'
 
-grails.project.dependency.resolver = "maven"
+grails.project.dependency.resolver = 'maven'
 
 grails.project.dependency.resolution = {
     // inherit Grails' default dependencies
-    inherits("global") {
+    inherits('global') {
         excludes 'ehcache'
     }
-    log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
+    log 'warn' // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
         grailsCentral()
         mavenLocal()
@@ -38,7 +38,7 @@ grails.project.dependency.resolution = {
         }
 
         // redis support
-        compile ":redis:1.3.3" //":redis:1.4.1"
+        compile ':redis:1.3.3'
     }
 }
 

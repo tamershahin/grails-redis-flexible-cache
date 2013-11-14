@@ -24,7 +24,6 @@ package org.gametube.redisflexiblecache;
  * It is recommended that implementations are designed to handle null objects/empty arrays on serialization and deserialization side.
  * Note that Redis does not accept null keys or values but can return null replies (for non existing keys).
  *
- * @author Tamer Shahin
  */
 public interface RedisSerializer<T> {
 

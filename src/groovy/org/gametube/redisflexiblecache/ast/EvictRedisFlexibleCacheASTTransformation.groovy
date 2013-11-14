@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-
-
-
 package org.gametube.redisflexiblecache.ast
 
 import org.codehaus.groovy.ast.ASTNode
@@ -26,21 +23,24 @@ import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
+/**
+ * AST transformation for the EvictRedisFlexibleCache annotation
+ */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class EvictRedisFlexibleCacheASTTransformation extends AbstractRedisFlexibleASTTransformation {
 
     @Override
-    protected void generateQuickCacheProperties(ASTNode[] astNodes, SourceUnit sourceUnit, Map quickCacheProperties) {
+    protected void generateDoCacheProperties(ASTNode[] astNodes, SourceUnit sourceUnit, Map doCacheProperties) {
         def keyString = astNodes[0]?.members?.key?.text
 
-        if (!validateQuickCacheProperties(astNodes, sourceUnit, keyString)) {
+        if (!validateDoCacheProperties(astNodes, sourceUnit, keyString)) {
             return
         }
 
-        quickCacheProperties.put(KEY, keyString)
+        doCacheProperties.put(KEY, keyString)
     }
 
-    private Boolean validateQuickCacheProperties(ASTNode[] astNodes, SourceUnit sourceUnit, keyString) {
+    private Boolean validateDoCacheProperties(ASTNode[] astNodes, SourceUnit sourceUnit, keyString) {
 
         if (!keyString || keyString.class != String) {
             addError('Internal Error: annotation does not contain key property', astNodes[0], sourceUnit)
@@ -56,9 +56,9 @@ class EvictRedisFlexibleCacheASTTransformation extends AbstractRedisFlexibleASTT
     }
 
     @Override
-    protected ArgumentListExpression makeRedisServiceArgumentListExpression(Map quickCacheProperties) {
+    protected ArgumentListExpression makeRedisServiceArgumentListExpression(Map doCacheProperties) {
         ArgumentListExpression argumentListExpression = new ArgumentListExpression()
-        addRedisServiceQuickCacheKeyExpression(quickCacheProperties, argumentListExpression)
+        addRedisServiceDoCacheKeyExpression(doCacheProperties, argumentListExpression)
         argumentListExpression
     }
 }

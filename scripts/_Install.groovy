@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-
+// TODO
 private void updateConfig() {
     def appDir = "$basedir/grails-app"
     def configFile = new File(appDir, 'conf/Config.groovy')

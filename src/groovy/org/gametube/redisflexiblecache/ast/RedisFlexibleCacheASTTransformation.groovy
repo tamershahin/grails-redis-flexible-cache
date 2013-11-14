@@ -23,27 +23,30 @@ import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
+/**
+ * AST transformation for the EvictRedisFlexibleCache annotation
+ */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class RedisFlexibleCacheASTTransformation extends AbstractRedisFlexibleASTTransformation {
 
     @Override
-    protected void generateQuickCacheProperties(ASTNode[] astNodes, SourceUnit sourceUnit, Map quickCacheProperties) {
+    protected void generateDoCacheProperties(ASTNode[] astNodes, SourceUnit sourceUnit, Map doCacheProperties) {
         def expire = astNodes[0]?.members?.expire?.text ?: '-1'
         def keyString = astNodes[0]?.members?.key?.text
         def group = astNodes[0]?.members?.group?.text ?: ''
         def reAttachToSession = astNodes[0]?.members?.reAttachToSession?.value ?: false
 
-        if (!validateQuickCacheProperties(astNodes, sourceUnit, keyString, expire, group, reAttachToSession)) {
+        if (!validateDoCacheProperties(astNodes, sourceUnit, keyString, expire, group, reAttachToSession)) {
             return
         }
 
-        quickCacheProperties.put(KEY, keyString)
-        quickCacheProperties.put(EXPIRE, expire)
-        quickCacheProperties.put(GROUP, group)
-        quickCacheProperties.put(REATTACH_TO_SESSION, reAttachToSession)
+        doCacheProperties.put(KEY, keyString)
+        doCacheProperties.put(EXPIRE, expire)
+        doCacheProperties.put(GROUP, group)
+        doCacheProperties.put(REATTACH_TO_SESSION, reAttachToSession)
     }
 
-    private Boolean validateQuickCacheProperties(ASTNode[] astNodes, SourceUnit sourceUnit, keyString, expire, String group, reAttachToSession) {
+    private Boolean validateDoCacheProperties(ASTNode[] astNodes, SourceUnit sourceUnit, keyString, expire, String group, reAttachToSession) {
 
         if (!keyString || keyString.class != String) {
             addError('Internal Error: annotation does not contain key property', astNodes[0], sourceUnit)
@@ -73,17 +76,17 @@ class RedisFlexibleCacheASTTransformation extends AbstractRedisFlexibleASTTransf
     }
 
     @Override
-    protected ArgumentListExpression makeRedisServiceArgumentListExpression(Map quickCacheProperties) {
+    protected ArgumentListExpression makeRedisServiceArgumentListExpression(Map doCacheProperties) {
         ArgumentListExpression argumentListExpression = new ArgumentListExpression()
-        addRedisServiceQuickCacheKeyExpression(quickCacheProperties, argumentListExpression)
-        if (quickCacheProperties.containsKey(GROUP)) {
-            argumentListExpression.addExpression(makeConstantExpression(quickCacheProperties.get(GROUP)))
+        addRedisServiceDoCacheKeyExpression(doCacheProperties, argumentListExpression)
+        if (doCacheProperties.containsKey(GROUP)) {
+            argumentListExpression.addExpression(makeConstantExpression(doCacheProperties.get(GROUP)))
         }
-        if (quickCacheProperties.containsKey(EXPIRE)) {
-            argumentListExpression.addExpression(makeConstantExpression(Integer.parseInt(quickCacheProperties.get(EXPIRE).toString())))
+        if (doCacheProperties.containsKey(EXPIRE)) {
+            argumentListExpression.addExpression(makeConstantExpression(Integer.parseInt(doCacheProperties.get(EXPIRE).toString())))
         }
-        if (quickCacheProperties.containsKey(REATTACH_TO_SESSION)) {
-            argumentListExpression.addExpression(makeConstantExpression(quickCacheProperties.get(REATTACH_TO_SESSION)))
+        if (doCacheProperties.containsKey(REATTACH_TO_SESSION)) {
+            argumentListExpression.addExpression(makeConstantExpression(doCacheProperties.get(REATTACH_TO_SESSION)))
         }
         argumentListExpression
     }

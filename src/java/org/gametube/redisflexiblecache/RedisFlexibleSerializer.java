@@ -21,7 +21,6 @@ import org.springframework.core.serializer.support.SerializingConverter;
 
 /**
  * Class that holds the serializing and deserializing converters
- * @author Tamer Shahin
  */
 public class RedisFlexibleSerializer implements RedisSerializer<Object> {
 

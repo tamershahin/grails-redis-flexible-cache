@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-import org.gametube.redisflexiblecache.RedisFlexibleCachingService
+
+import org.gametube.redisflexiblecache.RedisFlexibleCacheService
 import org.gametube.redisflexiblecache.RedisFlexibleDeserializer
 import org.gametube.redisflexiblecache.RedisFlexibleSerializer
 import org.springframework.core.serializer.DefaultSerializer
 import org.springframework.core.serializer.support.DeserializingConverter
 import org.springframework.core.serializer.support.SerializingConverter
 
-//import redis.clients.jedis.JedisPool
-//import redis.clients.jedis.JedisSentinelPool
 class RedisFlexibleCacheGrailsPlugin {
     // the plugin version
     def version = "0.1"
@@ -51,7 +50,7 @@ any kind of Serializable object. This plugin is inspired by both but is not base
     def watchedResources = ['file:./grails-app/controllers/**', 'file:./grails-app/services/**']
 
     // Details of company behind the plugin (if there is one)
-    def organization = [name: "GameTube sas", url: "http://www.gametube.org/"]
+    def organization = [name: "GameTube SAS", url: "http://www.gametube.org/"]
 
     // Any additional developers beyond the author specified above.
     def developers = [[name: "Germán Sancho", email: "german@gametube.org"]]
@@ -71,8 +70,8 @@ any kind of Serializable object. This plugin is inspired by both but is not base
 
         String connectionToUse = mergeConfigMaps(application)?.connectionToUse?.capitalize()
 
-        customSerializer(DefaultSerializer)  //the standard serializer is ok
-        customDeserializer(RedisFlexibleDeserializer) //but the standard deserializer is slow, so I use custom one instead
+        customSerializer(DefaultSerializer)  // the standard serializer is ok
+        customDeserializer(RedisFlexibleDeserializer) // but the standard deserializer is slow, so I use custom one instead
 
         serializingConverter(SerializingConverter, ref('customSerializer'))
         deserializingConverter(DeserializingConverter, ref('customDeserializer'))
@@ -82,7 +81,7 @@ any kind of Serializable object. This plugin is inspired by both but is not base
             deserializingConverter = ref('deserializingConverter')
         }
 
-        redisFlexibleCachingService(RedisFlexibleCachingService) {
+        redisFlexibleCachingService(RedisFlexibleCacheService) {
             redisFlexibleSerializer = ref('redisFlexibleSerializer')
             redisService = ref('redisService' + connectionToUse)
             grailsApplication = ref('grailsApplication')
@@ -90,8 +89,7 @@ any kind of Serializable object. This plugin is inspired by both but is not base
     }
 
     def doWithDynamicMethods = { ctx ->
-        // TODO Implement registering dynamic methods to classes (optional)
-        addCacheMethods(ctx)
+        addCacheMethodsAndLoadConfig(ctx)
     }
 
     def doWithApplicationContext = { ctx ->
@@ -102,21 +100,21 @@ any kind of Serializable object. This plugin is inspired by both but is not base
         // TODO Implement code that is executed when any artefact that this plugin is
         // watching is modified and reloaded. The event contains: event.source,
         // event.application, event.manager, event.ctx, and event.plugin.
-        addCacheMethods(event.application.mainContext)
+        addCacheMethodsAndLoadConfig(event.application.mainContext)
     }
 
     def onConfigChange = { event ->
         // TODO Implement code that is executed when the project configuration changes.
         // The event is the same as for 'onChange'.
-        addCacheMethods(event.application.mainContext)
+        addCacheMethodsAndLoadConfig(event.application.mainContext)
     }
 
     def onShutdown = { event ->
         // TODO Implement code that is executed when the application shuts down (optional)
     }
 
-    //if the connection specified exist, use it. if there are no connection specified use 'cache'. otherwise use only
-    //base parameters
+    // If the specified connection exists, use it. If there is no connection specified use 'cache'. Otherwise use only
+    // base parameters
     def mergeConfigMaps(def application) {
 
         String connectionToUse = application.config.grails.redisflexiblecache.connectiontouse ?: ""
@@ -135,7 +133,8 @@ any kind of Serializable object. This plugin is inspired by both but is not base
 
     }
 
-    def addCacheMethods(def mainContext) {
+    // Inject cache and evict methods in controllers and services
+    def addCacheMethodsAndLoadConfig(def mainContext) {
 
         def redisFlexibleCS = mainContext.redisFlexibleCachingService
 
