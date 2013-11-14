@@ -7,7 +7,8 @@ The [redis-plugin] plugin also provides the possibility to set a TTL for a cache
 This plugin is not an extension of [cache-plugin] plugin, it is far more simple and lighter at the same time.
 The [cache-plugin] gives a deep integration with grails Controller CoC mechanism, but i think it creates too much overhead sometimes.
 
-This plugin is inspired by both but is not based on them.
+The cache implementation provided by this plugin is inspired by [redis-cache-plugin] and [redis-plugin] but is not based on them.
+This plugins depends on [redis-plugin] for communication with redis and therefore it uses its configuration DSL.
 
 Installation
 ------------
@@ -18,7 +19,7 @@ Dependency :
 In order to access the redis server where cached entries are stored, the plugin uses the configuration of the [redis-plugin]. 
 Typically, you'd have something like this in your `grails-app/conf/Config.groovy` file:
 
-    grails.redisflexiblecache.connectiontouse = 'cache'
+    grails.redisflexiblecache.connectiontouse = 'cache' // not mandatory. if not declared 'cache' is the default value
     grails {  // example of configuration
         redis {
             poolConfig {
@@ -31,19 +32,19 @@ Typically, you'd have something like this in your `grails-app/conf/Config.groovy
             timeout = 2000 // default in milliseconds
             password = '' // defaults to no password
             connections {
-                 cache {
-                     //enabled = false // cache enabled by default
-                     database = 2
-                     host = 'devserver'  // will override the base one
-                     defaultTTL = 10 * 60 // seconds (used only if no ttl are declared in the annotation/map and no expireMap is defined
-                     expireMap = [never: Integer.MAX_VALUE,
-                             low: 10 * 60,
-                             mid_low: 5 * 60,
-                             mid: 2 * 60,
-                             high: 1 * 60
-                     ]
-
-                 }
+                cache {
+                    //enabled = false // cache enabled by default
+                    database = 2
+                    host = 'localhost'  // will override the base one
+                    defaultTTL = 10 * 60 // seconds (used only if no ttl are declared in the annotation/map and no expireMap is defined
+                    expireMap = [ // values in seconds
+                            never: -1, // negative values mean do not set any TTL
+                            low: 10 * 60,
+                            mid_low: 5 * 60,
+                            mid: 2 * 60,
+                            high: 1 * 60
+                    ]
+                }
             }
         }
     }
@@ -56,23 +57,38 @@ There are two additional entries in the connection configuration:
 Plugin Usage
 ------------
 
+## Parameters ##
+
+The plugin can be used in many way, as explained below, but the set of parameters availble are always the same.
+In case of storing/retrieving values from the cache the values are:
+
+    key               - A unique key for the data cache.
+    group             - A valid key present in expireMap.
+    expire            - Expire time in ms.  Will default to never so only pass a value like 3600 if you want value to expire.
+    reAttachToSession - a bolean to indicate that the plugin must try to reattach any domain class cached to current sessione.
+
+In case of evicting values from the cache the value is only:
+
+    key               - A key for the data cache to evict. You can insert also `*` and `?` wildcards to evict a set of keys as per Redis specification.
+
+
 ### redisFlexibleCacheService Bean ###
 
     def redisFlexibleCacheService
 
 The `redisFlexibleCacheService` has 2 methods: 
  * `doCache`: stores/retrieves an object from the cache using a given key.
- * `evictCache` evicts a key and its value from the cache.
+ * `evictCache` evicts a key (ore set if wildcard is present into the key string) and its value from the cache.
 
 This service is a standard Spring bean that can be injected and used in controllers, services, etc.
 
 Example:
     
-    redisFlexibleCacheService.doCache(key, group, ttl, reattach, {
+    redisFlexibleCacheService.doCache('some:key:1', 'someGroup', 120, true, {
         return somethingToCache
     })
 
-    redisFlexibleCacheService.evictCache(keys, {
+    redisFlexibleCacheService.evictCache( 'some:key:*', {
                 log.debug('evicted :' + keys);
     })
 
@@ -95,7 +111,7 @@ Here is an example of usage:
        return [result: res]
     }
 
-### Annotation ###
+### Annotations ###
 
 It is also possible to use two Annotations on methods to access to cache functionality: 
  * `@RedisFlexibleCache`
@@ -114,22 +130,6 @@ Here is an example of usage:
             log.debug('evict')
         }
     }
-
-
-### @RedisFlexibleCache ###
-
-This annotation takes the following parameters:
-
-    key               - A unique key for the data cache. 
-    group             - A valid key present in expireMap.
-    expire            - Expire time in ms.  Will default to never so only pass a value like 3600 if you want value to expire.
-    reAttachToSession - a bolean to indicate that the plugin must try to reattach any domain class cached to current sessione.
-
-### @EvictRedisFlexibleCache ###
-
-This annotation takes the following parameter:
-
-    key               - A unique key for the data cache to evict. 
 
 
 ### Memoization Annotation Keys ###
@@ -158,9 +158,16 @@ Release Notes
 
 * 0.1 - released 13/11/2013 - this is the first released revision of the plugin.
 
+
+Credits
+=======
+
+This plugin is sponsored by [GameTube].
+
 [redis-cache-plugin]: http://www.grails.org/plugin/cache-redis
 [redis-plugin]: http://www.grails.org/plugin/redis
 [redis-plugin-example]: https://github.com/grails-plugins/grails-redis#memoization-annotation-keys
 [cache-plugin]: http://www.grails.org/plugin/cache
 [redis]: http://redis.io
 [jedis]: https://github.com/xetorthio/jedis/wiki
+[GameTube]: http://www.gametube.org/

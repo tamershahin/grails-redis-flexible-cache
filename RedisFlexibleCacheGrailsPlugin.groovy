@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import org.gametube.redisflexiblecache.RedisFlexibleCachingService
+
+import org.gametube.redisflexiblecache.RedisFlexibleCacheService
 import org.gametube.redisflexiblecache.RedisFlexibleDeserializer
 import org.gametube.redisflexiblecache.RedisFlexibleSerializer
 import org.springframework.core.serializer.DefaultSerializer
