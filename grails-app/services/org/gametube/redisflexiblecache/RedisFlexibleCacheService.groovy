@@ -16,12 +16,11 @@
 
 package org.gametube.redisflexiblecache
 
-import org.gametube.redisflexiblecache.RedisSerializer
 import redis.clients.jedis.Jedis
 
 import java.util.regex.Pattern
 
-class RedisFlexibleCachingService {
+class RedisFlexibleCacheService {
 
     def redisService
 

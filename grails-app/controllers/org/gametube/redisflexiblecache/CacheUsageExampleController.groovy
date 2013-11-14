@@ -34,11 +34,11 @@ class CacheUsageExampleController {
         render "we have this books: ${result.books.name.join(",")}. total price: ${result.totalPrice}"
     }
 
-    def redisFlexibleCachingService
+    def redisFlexibleCacheService
 
     def alsoLikeThis() {
         // wheen group and ttl are both != null, only ttl will be used.
-        def result = redisFlexibleCachingService.doCache("also", 'mid', 120, false, {
+        def result = redisFlexibleCacheService.doCache("also", 'mid', 120, false, {
             log.debug('not cached yet')
             [books: Book.list(),
                     totalPrice: 1000]
@@ -54,7 +54,7 @@ class CacheUsageExampleController {
     }
 
     def evictAll() {
-        redisFlexibleCachingService.evictCache('*', {
+        redisFlexibleCacheService.evictCache('*', {
             log.debug('evict everything')
         })
         render 'evicted everything'

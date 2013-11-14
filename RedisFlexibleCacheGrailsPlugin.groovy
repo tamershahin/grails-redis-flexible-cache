@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import org.gametube.redisflexiblecache.RedisFlexibleCachingService
+import org.gametube.redisflexiblecache.RedisFlexibleCacheService
 import org.gametube.redisflexiblecache.RedisFlexibleDeserializer
 import org.gametube.redisflexiblecache.RedisFlexibleSerializer
 import org.springframework.core.serializer.DefaultSerializer
@@ -82,7 +82,7 @@ any kind of Serializable object. This plugin is inspired by both but is not base
             deserializingConverter = ref('deserializingConverter')
         }
 
-        redisFlexibleCachingService(RedisFlexibleCachingService) {
+        redisFlexibleCacheService(RedisFlexibleCacheService) {
             redisFlexibleSerializer = ref('redisFlexibleSerializer')
             redisService = ref('redisService' + connectionToUse)
             grailsApplication = ref('grailsApplication')
@@ -137,7 +137,7 @@ any kind of Serializable object. This plugin is inspired by both but is not base
 
     def addCacheMethods(def mainContext) {
 
-        def redisFlexibleCS = mainContext.redisFlexibleCachingService
+        def redisFlexibleCS = mainContext.redisFlexibleCacheService
 
         def clazzes = []
         clazzes += mainContext.grailsApplication.controllerClasses*.clazz

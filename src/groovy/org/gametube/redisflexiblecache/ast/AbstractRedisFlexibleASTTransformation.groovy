@@ -29,7 +29,7 @@ import org.codehaus.groovy.control.messages.SyntaxErrorMessage
 import org.codehaus.groovy.syntax.SyntaxException
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
-import org.gametube.redisflexiblecache.RedisFlexibleCachingService
+import org.gametube.redisflexiblecache.RedisFlexibleCacheService
 
 import static org.springframework.asm.Opcodes.ACC_PRIVATE
 import static org.springframework.asm.Opcodes.ACC_PUBLIC
@@ -45,7 +45,7 @@ abstract class AbstractRedisFlexibleASTTransformation implements ASTTransformati
     protected static final String REATTACH_TO_SESSION = 'reAttachToSession'
     protected static final String HASH_CODE = '#'
     protected static final String GSTRING = '$'
-    protected static final String CACHE_SERVICE = 'redisFlexibleCachingService'
+    protected static final String CACHE_SERVICE = 'redisFlexibleCacheService'
 
     void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {
         //map to hold the params we will pass to the quickCache[?] method
@@ -95,10 +95,10 @@ abstract class AbstractRedisFlexibleASTTransformation implements ASTTransformati
     private void injectCacheService(SourceUnit sourceUnit) {
         if (!((ClassNode) sourceUnit.AST.classes.toArray()[0]).properties?.any { it?.field?.name == CACHE_SERVICE }) {
 //            println "Adding cacheService to class ${sourceUnit.AST.classes[0].name}."
-            if (!sourceUnit.AST.imports.any { it.className == ClassHelper.make(RedisFlexibleCachingService).name }
-                    && !sourceUnit.AST.starImports.any { it.packageName == "${ClassHelper.make(RedisFlexibleCachingService).packageName}." }) {
-//                println "Adding namespace ${ClassHelper.make(RedisFlexibleCachingService).packageName} to class ${sourceUnit.AST.classes[0].name}."
-                sourceUnit.AST.addImport('RedisFlexibleCachingService', ClassHelper.make(RedisFlexibleCachingService))
+            if (!sourceUnit.AST.imports.any { it.className == ClassHelper.make(RedisFlexibleCacheService).name }
+                    && !sourceUnit.AST.starImports.any { it.packageName == "${ClassHelper.make(RedisFlexibleCacheService).packageName}." }) {
+//                println "Adding namespace ${ClassHelper.make(RedisFlexibleCacheService).packageName} to class ${sourceUnit.AST.classes[0].name}."
+                sourceUnit.AST.addImport('RedisFlexibleCacheService', ClassHelper.make(RedisFlexibleCacheService))
             }
             addRedisServiceProperty((ClassNode) sourceUnit.AST.classes.toArray()[0], CACHE_SERVICE)
         }
