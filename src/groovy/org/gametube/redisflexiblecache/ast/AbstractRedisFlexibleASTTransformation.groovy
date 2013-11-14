@@ -46,7 +46,7 @@ abstract class AbstractRedisFlexibleASTTransformation implements ASTTransformati
     protected static final String REATTACH_TO_SESSION = 'reAttachToSession'
     protected static final String HASH_CODE = '#'
     protected static final String GSTRING = '$'
-    protected static final String CACHE_SERVICE = 'redisFlexibleCachingService'
+    protected static final String CACHE_SERVICE = 'redisFlexibleCacheService'
 
     void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {
         //map to hold the params we will pass to the doCache method

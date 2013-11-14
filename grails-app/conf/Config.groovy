@@ -37,6 +37,8 @@ log4j = {
             'net.sf.ehcache.hibernate'
 }
 
+grails.redisflexiblecache.connectiontouse = 'cache' // not mandatory. if not declared 'cache' is the default value
+
 grails {  // example of configuration
     redis {
         poolConfig {
@@ -48,19 +50,20 @@ grails {  // example of configuration
         host = 'localhost'
         timeout = 2000 // default in milliseconds
         password = '' // defaults to no password
-
-        cache {
-            //enabled = false // cache enabled by default
-            database = 2
-            host = 'localhost'  // will override the base one
-            defaultTTL = 10 * 60 // seconds (used only if no ttl are declared in the annotation/map and no expireMap is defined
-            expireMap = [ // values in seconds
-                    never: -1, // negative values mean do not set any TTL
-                    low: 10 * 60,
-                    mid_low: 5 * 60,
-                    mid: 2 * 60,
-                    high: 1 * 60
-            ]
+        connections {
+            cache {
+                //enabled = false // cache enabled by default
+                database = 2
+                host = 'localhost'  // will override the base one
+                defaultTTL = 10 * 60 // seconds (used only if no ttl are declared in the annotation/map and no expireMap is defined
+                expireMap = [ // values in seconds
+                        never: -1, // negative values mean do not set any TTL
+                        low: 10 * 60,
+                        mid_low: 5 * 60,
+                        mid: 2 * 60,
+                        high: 1 * 60
+                ]
+            }
         }
     }
 }
