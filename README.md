@@ -1,10 +1,10 @@
 Grails Flexible Cache Redis Plugin
 ==================================
 
-This plugin is an alternative to [redis-cache-plugin]. It give the possibility to set the expire time in seconds for every cached keys.
-This plugin is not an extention of [cache-plugin] plugin, it is far more simple and lighter at the same time.
-Using the [redis-plugin] plugin is possible to set a TTL (using the `@Memoize` annotation given), but the it lacks the option to serialize
-any kind of Serializable objects. This plugin is inspired by both but is not based on them.
+This plugin is an alternative to [redis-cache-plugin]. It gives the possibility to set the expire time in seconds for every cached key, and provides a service, annotations and injected methods to perform entry caching and eviction.
+This plugin is not an extension of [cache-plugin] plugin, it is far more simple and lighter at the same time.
+The [redis-plugin] plugin also provides the possibility to set a TTL for a cached entry (using the provided `@Memoize` annotation), but the it lacks the option to serialize
+any kind of Serializable objects (only object ids are cached and then hydrated from main DB). This plugin is inspired by both but is not based on them.
 
 
 Installation
@@ -13,7 +13,7 @@ Dependency :
 
     compile ":redis-flexible-cache:0.1" 
 
-The plugin expects the following parameter in your `grails-app/conf/Config.groovy` file:
+In order to access the redis server where cached entries are stored, the plugin uses the configuration of the [redis-plugin]. Typically, you'd have something like this in your `grails-app/conf/Config.groovy` file:
 
     grails {  // example of configuration
         redis {
@@ -41,6 +41,9 @@ The plugin expects the following parameter in your `grails-app/conf/Config.groov
         }
     }
 
+There are two additional entries in the connection configuration:
+`defaultTTL`: indicates the amount of seconds to use as TTL when no other TTL value is provided explicitly
+`expireMap`: provides names and values (in seconds) for TTL presets that can be used in annotations/method calls 
 
 
 Plugin Usage
@@ -48,29 +51,31 @@ Plugin Usage
 
 ### RedisFlexibleCachingService Bean ###
 
-    def redisFlexibleCachingService
+    def redisFlexibleCacheService
 
-The `redisFlexibleCachingService` has 2 methods: 
-`doCache` for store/retrieve object from the cache using a given key.
-`evictCache` for evict a key and his value from the cache.
+The `redisFlexibleCacheService` has 2 methods: 
+`doCache`: stores/retrieves an object from the cache using a given key.
+`evictCache` evicts a key and its value from the cache.
 
-Is a standard service bean that can be inject and used in controller, services, ecc.
+This service is a standard Spring bean that can be injected and used in controllers, services, etc.
 
-example:
+Example:
     
-    redisFlexibleCachingService.doCache(keys, groups, ttls, reattachs, {
-            return somethingToCache
-        })
+    redisFlexibleCachingService.doCache(key, group, ttl, reattach, {
+        return somethingToCache
+    })
 
 ### Controllers/Services dynamic method ###
 
-At application startup/reaload each Grails controllers and services has injected the two methods provided from redisFlexibleCachingService: 
+At application startup/reaload each Grails controller and service gets injected the two methods provided from redisFlexibleCachingService withe the followeing names: 
 `cache` and `evictCache`.
 
 Here is an example of usage:
 
     def index(){
-      //params validation, ecc...
+      
+      // params validation, etc...
+      
       def res = cache group: 'longLasting', key: "key:1", reAttachToSession: true, {
                   def bookList = // long lasting algortitm that gives back Domain Classes
                   def calculated = // long lasting algoritm that gives back Integer  
@@ -82,11 +87,11 @@ Here is an example of usage:
 
 ### Annotation ###
 
-It is also possible to use two Annotation to access to cache functionality: `@RedisFlexibleCache` and `@EvictRedisFlexibleCache`. 
+It is also possible to use two Annotations on methods to access to cache functionality: `@RedisFlexibleCache` and `@EvictRedisFlexibleCache`. 
 
 Here is an example of usage:
     
-    class BookService{
+    class BookService {
         @RedisFlexibleCache(key = 'bookservice:serviceMethod:author:1:book:#{text}', expire = '60',reAttachToSession = false)
         def serviceMethod(String text) {
             // long lasting operations
@@ -112,16 +117,16 @@ This annotation takes the following parameters:
 
 This annotation takes the following parameter:
 
-    key               - A unique key for the data cache. 
+    key               - A unique key for the data cache to evict. 
 
 
 ### Memoization Annotation Keys ###
 
-Since the value of the key must be passed in but will also be transformed by AST, we can not use the `$` style gstring values in the keys.  Instead you will use the `#` sign to represent a gstring value such as `@Memoize(key = "#{book.title}:#{book.id}")`.
+Since the value of the key must be passed in but will also be transformed by AST, we can not use the `$` style gstring values in the keys.  Instead you will use the `#` sign to represent a gstring value such as `@RedisFlexibleCache(key = "#{book.title}:#{book.id}")`.
 
 During the AST tranformation these will be replaced with the `$` character and will evaluate correctly during runtime as `redisService.memoize("${book.title}:${book.id}"){...}`.
 
-Anything that is not in the format `key='#text'` or `key="${text}"` will be treated as a string literal.  Meaning that `key="text"` would be the same as using the literal string `"text"` as the memoize key `redisService.memoize("text"){...}` instead of the variable `$text`.
+Anything that is not in the format `key='#text'` or `key="${text}"` will be treated as a string literal.  Meaning that `key="text"` would be the same as using the literal string `"text"` as the cache key `redisFlexibleCacheService.memoize("text"){...}` instead of the variable `$text`.
 
 Any variable that you use in the key property of the annotation will need to be in scope for this to work correctly.  You will only get a RUNTIME error if you use a variable reference that is out of scope.
 
@@ -141,6 +146,9 @@ Release Notes
 =============
 
 * 0.1.0 - released 13/11/2013 - this is the first released revision of the plugin. 
+
+References
+==========
 
 [redis-cache-plugin]: http://www.grails.org/plugin/cache-redis
 [redis-plugin]: http://www.grails.org/plugin/redis
