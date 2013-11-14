@@ -6,7 +6,6 @@ The [redis-plugin] plugin also provides the possibility to set a TTL for a cache
 any kind of Serializable objects (only object ids are cached and then hydrated from main DB). This plugin is inspired by both but is not based on them.
 This plugin is not an extension of [cache-plugin] plugin, it is far more simple and lighter at the same time.
 The [cache-plugin] gives a deep integration with grails Controller CoC mechanism, but i think it creates too much overhead sometimes.
-
 This plugin is inspired by both but is not based on them.
 
 Installation
