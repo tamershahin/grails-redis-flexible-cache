@@ -31,7 +31,7 @@ class CacheUsageExampleController {
                     totalPrice: 1000]
         }
 
-        render "we have this books: ${result.books.name.join(",")}. total price: ${result.totalPrice}"
+        render "we have these books: ${result.books.name.join(",")}. total price: ${result.totalPrice}"
     }
 
     def redisFlexibleCacheService
@@ -43,8 +43,7 @@ class CacheUsageExampleController {
             [books: Book.list(),
                     totalPrice: 1000]
         })
-
-        render "we have this books: ${result.books.name.join(",")}. total price: ${result.totalPrice}"
+        render "we have these books: ${result.books.name.join(",")}. total price: ${result.totalPrice}"
     }
 
     @EvictRedisFlexibleCache(key = 'indexAction')
