@@ -17,7 +17,7 @@
 package org.gametube.redisflexiblecache
 
 import redis.clients.jedis.Jedis
-import redis.clients.jedis.Transaction
+import redis.clients.jedis.Pipeline
 
 import java.util.regex.Pattern
 
@@ -66,9 +66,9 @@ class RedisFlexibleCacheService {
         }
 
         // expire all the keys
-        redisService.withTransaction { Transaction transaction ->
+        redisService.withPipeline { Pipeline pipeline ->
             keys.each { byte[] key ->
-                transaction.expire(key, 0)
+                pipeline.del(key)
                 if (log.isDebugEnabled()) {
                     log.debug("evicted the key : ${new String(key)}")
                 }
