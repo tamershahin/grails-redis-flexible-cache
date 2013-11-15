@@ -22,3 +22,4 @@ misc.xml
 plugin.xml
 *.iml
 wrapper/
+grails-redis-flexible-cache-*-SNAPSHOT.*
