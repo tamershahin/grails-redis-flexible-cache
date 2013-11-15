@@ -69,6 +69,7 @@ class RedisFlexibleCacheService {
         redisService.withPipeline { Pipeline pipeline ->
             keys.each { byte[] key ->
                 pipeline.del(key)
+                pipeline.setex(key, 0, null)
                 if (log.isDebugEnabled()) {
                     log.debug("evicted the key : ${new String(key)}")
                 }

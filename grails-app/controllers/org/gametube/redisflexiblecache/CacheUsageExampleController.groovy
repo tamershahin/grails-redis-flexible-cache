@@ -25,7 +25,7 @@ class CacheUsageExampleController {
 
     def nowWorking() {
         //this will work
-        def result = cache group: 'mid', key: "now", reAttachToSession: true, {
+        def result = redisFlexibleCache group: 'mid', key: "now", reAttachToSession: true, {
             log.debug('not cached yet')
             [books: Book.list(),
                     totalPrice: 1000]
@@ -48,7 +48,7 @@ class CacheUsageExampleController {
 
     @EvictRedisFlexibleCache(key = 'indexAction')
     def evictIndexAction() {
-        evictCache key: 'indexAction'
+        evictRedisFlexibleCache key: 'indexAction'
         render 'evicted indexAction'
     }
 
