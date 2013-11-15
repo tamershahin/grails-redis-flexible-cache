@@ -36,34 +36,3 @@ log4j = {
             'org.hibernate',
             'net.sf.ehcache.hibernate'
 }
-
-grails.redisflexiblecache.connectiontouse = 'cache' // not mandatory. if not declared 'cache' is the default value
-
-grails {  // example of configuration
-    redis {
-        poolConfig {
-            // jedis pool specific tweaks here, see jedis docs & src
-            // ex: testWhileIdle = true
-        }
-        database = 1          // each other grails env can have a private one
-        port = 6379
-        host = 'localhost'
-        timeout = 2000 // default in milliseconds
-        password = '' // defaults to no password
-        connections {
-            cache {
-                //enabled = false // cache enabled by default
-                database = 2
-                host = 'localhost'  // will override the base one
-                defaultTTL = 10 * 60 // seconds (used only if no ttl are declared in the annotation/map and no expireMap is defined
-                expireMap = [ // values in seconds
-                        never: -1, // negative values mean do not set any TTL
-                        low: 10 * 60,
-                        mid_low: 5 * 60,
-                        mid: 2 * 60,
-                        high: 1 * 60
-                ]
-            }
-        }
-    }
-}
