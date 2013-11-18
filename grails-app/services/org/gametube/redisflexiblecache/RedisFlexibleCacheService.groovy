@@ -68,8 +68,7 @@ class RedisFlexibleCacheService {
         // expire all the keys
         redisService.withPipeline { Pipeline pipeline ->
             keys.each { byte[] key ->
-                pipeline.del(key)
-                pipeline.setex(key, 0, null)
+                pipeline.expire(key, 0) // setting expire time = 0 will work for keys already with ttl and the one without ttl
                 if (log.isDebugEnabled()) {
                     log.debug("evicted the key : ${new String(key)}")
                 }
