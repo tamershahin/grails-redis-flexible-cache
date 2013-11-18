@@ -26,6 +26,8 @@ import java.util.regex.Pattern
  */
 class RedisFlexibleCacheService {
 
+    static transactional = false
+
     def redisService
 
     def grailsApplication
@@ -157,7 +159,7 @@ class RedisFlexibleCacheService {
      * @param obj the object to reattach (deserialized from cache)
      * @return the same object but with domain classes (if any) reattached to session
      */
-    private recursiveReAttachToSession(def obj) {
+    private recursiveReAttachToSession(obj) {
         if (obj instanceof Collection) {
             obj.each {
                 recursiveReAttachToSession(it)
@@ -176,9 +178,9 @@ class RedisFlexibleCacheService {
      * Do nothig if not a domain class
      * @param obj the object to reattach if it is a domain class.
      */
-    private reAttachToSessionIfPossible(def obj) {
+    private reAttachToSessionIfPossible(obj) {
         try {
-            if (obj.class in grailsApplication.domainClasses*.clazz && !obj.isAttached()) {
+            if (grailsApplication.isDomainClass(obj.class) && !obj.isAttached()) {
                 def fresh = obj.load(obj.id)
                 if (!fresh) {
                     fresh = obj.refresh()

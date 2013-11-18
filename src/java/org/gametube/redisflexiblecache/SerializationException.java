@@ -16,13 +16,14 @@
 
 package org.gametube.redisflexiblecache;
 
-
 import org.springframework.core.NestedRuntimeException;
 
 /**
  * Generic exception indicating a serialization/deserialization error.
  */
 public class SerializationException extends NestedRuntimeException {
+
+    private static final long serialVersionUID = 1;
 
     /**
      * Constructs a new <code>SerializationException</code> instance.

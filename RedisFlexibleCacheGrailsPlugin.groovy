@@ -23,16 +23,13 @@ import org.springframework.core.serializer.support.DeserializingConverter
 import org.springframework.core.serializer.support.SerializingConverter
 
 class RedisFlexibleCacheGrailsPlugin {
-    // the plugin version
     def version = "0.1"
-    // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.0 > *"
-    // resources that are excluded from plugin packaging
     def pluginExcludes = [
             "grails-app/domain/**", "grails-app/views/**", "grails-app/controllers/**"
     ]
 
-    def title = "Redis Flexible Cache Plugin" // Headline display name of the plugin
+    def title = "Redis Flexible Cache Plugin"
     def author = "Tamer Shahin"
     def authorEmail = "tamer@gametube.org"
     def description = '''
@@ -42,7 +39,6 @@ This means that potentially a lot of data will go to redis, so pay attention to 
 This plugin is not an extension of cache-plugin plugin, it is far more simple and lighter at the same time. The cache-plugin gives a deep integration with grails Controller CoC mechanism, but i think it creates too much overhead sometimes.
 The cache implementation provided by this plugin is inspired by redis-cache-plugin and redis-plugin but is not based on them. This plugins depends on redis-plugin for communication with redis and therefore it uses its configuration DSL.'''
 
-    // URL to the plugin's documentation
     def documentation = "https://github.com/tamershahin/grails-redis-flexible-cache/blob/master/README.md"
 
     def license = "APACHE"
@@ -51,24 +47,12 @@ The cache implementation provided by this plugin is inspired by redis-cache-plug
 
     def watchedResources = ['file:./grails-app/controllers/**', 'file:./grails-app/services/**']
 
-    // Details of company behind the plugin (if there is one)
     def organization = [name: "GameTube SAS", url: "http://www.gametube.org/"]
-
-    // Any additional developers beyond the author specified above.
     def developers = [[name: "Germán Sancho", email: "german@gametube.org"]]
-
-    // Location of the plugin's issue tracker.
     def issueManagement = [system: "GITHUB", url: "https://github.com/tamershahin/grails-redis-flexible-cache/issues"]
-
-    // Online location of the plugin's browseable source code.
     def scm = [url: "https://github.com/tamershahin/grails-redis-flexible-cache"]
 
-    def doWithWebDescriptor = { xml ->
-        // TODO Implement additions to web.xml (optional), this event occurs before
-    }
-
     def doWithSpring = {
-        // TODO Implement runtime spring config (optional)
 
         String connectionToUse = mergeConfigMaps(application)?.connectionToUse?.capitalize()
 
@@ -95,30 +79,17 @@ The cache implementation provided by this plugin is inspired by redis-cache-plug
         addCacheMethodsAndLoadConfig(ctx)
     }
 
-    def doWithApplicationContext = { ctx ->
-        // TODO Implement post initialization spring config (optional)
-    }
-
     def onChange = { event ->
-        // TODO Implement code that is executed when any artefact that this plugin is
-        // watching is modified and reloaded. The event contains: event.source,
-        // event.application, event.manager, event.ctx, and event.plugin.
         addCacheMethodsAndLoadConfig(event.application.mainContext)
     }
 
     def onConfigChange = { event ->
-        // TODO Implement code that is executed when the project configuration changes.
-        // The event is the same as for 'onChange'.
         addCacheMethodsAndLoadConfig(event.application.mainContext)
-    }
-
-    def onShutdown = { event ->
-        // TODO Implement code that is executed when the application shuts down (optional)
     }
 
     // If the specified connection exists, use it. If there is no connection specified use 'cache'. Otherwise use only
     // base parameters
-    def mergeConfigMaps(def application) {
+    def mergeConfigMaps(application) {
 
         String connectionToUse = application.config.grails.redisflexiblecache.connectiontouse ?: ""
         def redisConfigMap = application.config.grails.redis ?: [:]
@@ -137,7 +108,7 @@ The cache implementation provided by this plugin is inspired by redis-cache-plug
     }
 
     // Inject cache and evict methods in controllers and services
-    def addCacheMethodsAndLoadConfig(def mainContext) {
+    def addCacheMethodsAndLoadConfig(mainContext) {
 
         def redisFlexibleCS = mainContext.redisFlexibleCacheService
 
