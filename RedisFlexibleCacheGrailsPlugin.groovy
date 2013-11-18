@@ -29,6 +29,7 @@ class RedisFlexibleCacheGrailsPlugin {
     def grailsVersion = "2.3 > *"
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
+            "grails-app/domain/**", "grails-app/views/**"
     ]
 
     def title = "Redis Flexible Cache Plugin" // Headline display name of the plugin
