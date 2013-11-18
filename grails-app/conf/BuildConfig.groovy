@@ -13,11 +13,9 @@ grails.project.dependency.resolution = {
         grailsCentral()
         mavenCentral()
         grailsRepo "http://grails.org/plugins"
-// mavenRepo "http://m2repo.spockframework.org/snapshots"
     }
 
     dependencies {
-//        compile 'redis.clients:jedis:2.1.0'
     }
 
     plugins {
