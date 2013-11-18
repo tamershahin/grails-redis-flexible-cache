@@ -20,11 +20,11 @@ import org.springframework.core.serializer.support.DeserializingConverter;
 import org.springframework.core.serializer.support.SerializingConverter;
 
 /**
- * Class that holds the serializing and deserializing converters
+ * Holds the serializing and deserializing converters.
  */
 public class RedisFlexibleSerializer implements RedisSerializer<Object> {
 
-    public static final byte[] EMPTY_ARRAY = new byte[0];
+    public static final byte[] EMPTY_ARRAY = {};
 
     protected SerializingConverter serializingConverter;
     protected DeserializingConverter deserializingConverter;

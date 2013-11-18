@@ -7,4 +7,4 @@ git clone git@github.com:tamershahin/redis-flexible-cache.git
 cd redis-flexible-cache
 grails clean
 grails compile
-grails publish-plugin --noScm
+grails publish-plugin --stacktrace
