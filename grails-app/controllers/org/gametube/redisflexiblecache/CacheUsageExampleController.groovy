@@ -37,7 +37,7 @@ class CacheUsageExampleController {
     def redisFlexibleCacheService
 
     def alsoLikeThis() {
-        // wheen group and ttl are both != null, only ttl will be used.
+        // when group and ttl are both != null, only ttl will be used.
         def result = redisFlexibleCacheService.doCache("also", 'mid', 120, false, {
             log.debug('not cached yet')
             [books: Book.list(),
