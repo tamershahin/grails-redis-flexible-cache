@@ -34,7 +34,7 @@ class RedisFlexibleCacheGrailsPlugin {
     def authorEmail = "tamer@gametube.org"
     def description = '''
 This plugin is an alternative to redis-cache-plugin. It gives the possibility to set the expire time in seconds for every cached key, and provides a service, annotations and injected methods to perform entry caching and eviction.
-The redis-plugin plugin also provides the possibility to set a TTL for a cached entry (using the provided @Memoize annotation), but the it lacks the option to serialize any kind of Serializable objects (only object ids are cached and then hydrated from main DB).
+The redis-plugin plugin also provides the possibility to set a TTL for a cached entry (using the provided @Memoize annotation), but it lacks the option to serialize any kind of Serializable objects (only object ids are cached and then hydrated from main DB).
 This means that potentially a lot of data will go to redis, so pay attention to memory and bandwidth consumption!
 This plugin is not an extension of cache-plugin plugin, it is far more simple and lighter at the same time. The cache-plugin gives a deep integration with grails Controller CoC mechanism, but i think it creates too much overhead sometimes.
 The cache implementation provided by this plugin is inspired by redis-cache-plugin and redis-plugin but is not based on them. This plugins depends on redis-plugin for communication with redis and therefore it uses its configuration DSL.'''
