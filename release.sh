@@ -3,7 +3,7 @@
 rm -rf target/release
 mkdir target/release
 cd target/release
-git clone git@github.com:tamershahin/grails-redis-flexible-cache.git
+git clone https://github.com/tamershahin/grails-redis-flexible-cache.git
 cd grails-redis-flexible-cache
 grails clean
 grails compile
