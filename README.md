@@ -162,6 +162,7 @@ Release Notes
 =============
 
 * 0.1 - released 13/11/2013 - this is the first released revision of the plugin.
+* 0.2 - released 25/11/2013 - now based on [redis-plugin] 1.4.2 version instead of 1.3.3. 
 
 
 Credits
