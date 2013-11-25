@@ -15,7 +15,7 @@ Installation
 ------------
 Dependency :
 
-    compile ":redis-flexible-cache:0.1" 
+    compile ":redis-flexible-cache:0.2" 
 
 In order to access the redis server where cached entries are stored, the plugin uses the configuration of the [redis-plugin]. 
 Typically, you'd have something like this in your `grails-app/conf/Config.groovy` file:
