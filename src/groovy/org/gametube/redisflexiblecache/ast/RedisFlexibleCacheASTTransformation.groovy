@@ -31,7 +31,7 @@ class RedisFlexibleCacheASTTransformation extends AbstractRedisFlexibleASTTransf
 
     @Override
     protected void generateDoCacheProperties(ASTNode[] astNodes, SourceUnit sourceUnit, Map doCacheProperties) {
-        def expire = astNodes[0]?.members?.expire?.text ?: '-1'
+        def expire = astNodes[0]?.members?.expire?.text
         def keyString = astNodes[0]?.members?.key?.text
         def group = astNodes[0]?.members?.group?.text ?: ''
         def reAttachToSession = astNodes[0]?.members?.reAttachToSession?.value ?: false
@@ -83,7 +83,11 @@ class RedisFlexibleCacheASTTransformation extends AbstractRedisFlexibleASTTransf
             argumentListExpression.addExpression(makeConstantExpression(doCacheProperties.get(GROUP)))
         }
         if (doCacheProperties.containsKey(EXPIRE)) {
-            argumentListExpression.addExpression(makeConstantExpression(Integer.parseInt(doCacheProperties.get(EXPIRE).toString())))
+            if (doCacheProperties.get(EXPIRE).toString().isNumber()) {
+                argumentListExpression.addExpression(makeConstantExpression(doCacheProperties.get(EXPIRE).toString().toInteger()))
+            } else {
+                argumentListExpression.addExpression(ConstantExpression.NULL)
+            }
         }
         if (doCacheProperties.containsKey(REATTACH_TO_SESSION)) {
             argumentListExpression.addExpression(makeConstantExpression(doCacheProperties.get(REATTACH_TO_SESSION)))
