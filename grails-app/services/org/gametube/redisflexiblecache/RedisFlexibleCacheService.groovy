@@ -140,7 +140,7 @@ class RedisFlexibleCacheService {
             if (log.isDebugEnabled()) {
                 log.debug "cache miss: $key"
             }
-            result = closure()
+            result = recursiveNavigateBeforeSerialize(closure())
             def serializedResult = redisFlexibleSerializer.serialize(result)
             if (serializedResult) redisService.withRedis { Jedis redis ->
                 if (ttl > 0) {
@@ -150,6 +150,29 @@ class RedisFlexibleCacheService {
                 }
             }
             return result
+        }
+    }
+
+    /**
+     * Recursively inspect results of the closure execution to cache. This allow all persistent properties in domain
+     * classes to cache to have a proper value (and not only the lazy loader handler) before serialization.
+     * @param obj the object to navigate
+     */
+    private void recursiveNavigateBeforeSerialize(obj) {
+        if (obj instanceof Collection) {
+            obj.each {
+                recursiveNavigateBeforeSerialize(it)
+            }
+        } else if (obj instanceof Map) {
+            obj.each { k, v ->
+                recursiveNavigateBeforeSerialize(v)
+            }
+        } else {
+            obj.properties.each { k, v ->
+                if (v && grailsApplication.isDomainClass(v.class)) {
+                    recursiveNavigateBeforeSerialize(v)
+                }
+            }
         }
     }
 
