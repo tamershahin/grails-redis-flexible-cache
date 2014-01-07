@@ -140,7 +140,8 @@ class RedisFlexibleCacheService {
             if (log.isDebugEnabled()) {
                 log.debug "cache miss: $key"
             }
-            result = recursiveNavigateBeforeSerialize(closure())
+            result = closure()
+            recursiveNavigateBeforeSerialize(result)
             def serializedResult = redisFlexibleSerializer.serialize(result)
             if (serializedResult) redisService.withRedis { Jedis redis ->
                 if (ttl > 0) {
