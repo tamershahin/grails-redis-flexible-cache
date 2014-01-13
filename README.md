@@ -166,6 +166,7 @@ Release Notes
 * 0.2   - released 25/11/2013 - now based on [redis-plugin] 1.4.2 version instead of 1.3.3.
 * 0.2.2 - released 20/12/2013 - fixed a bug
 * 0.2.3 - released 07/01/2014 - fixed a bug
+* 0.2.4 - released 13/01/2014 - fixed a bug
 
 Credits
 =======

@@ -168,7 +168,7 @@ class RedisFlexibleCacheService {
             obj.each { k, v ->
                 recursiveNavigateBeforeSerialize(v)
             }
-        } else {
+        } else if (obj != null) {
             obj.properties.each { k, v ->
                 if (v && grailsApplication.isDomainClass(v.class)) {
                     recursiveNavigateBeforeSerialize(v)
@@ -204,7 +204,7 @@ class RedisFlexibleCacheService {
      */
     private reAttachToSessionIfPossible(obj) {
         try {
-            if (grailsApplication.isDomainClass(obj.class) && !obj.isAttached()) {
+            if (obj != null && grailsApplication.isDomainClass(obj.class) && !obj.isAttached()) {
                 def fresh = obj.load(obj.id)
                 if (!fresh) {
                     fresh = obj.refresh()
