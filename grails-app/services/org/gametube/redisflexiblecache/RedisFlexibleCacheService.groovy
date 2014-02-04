@@ -121,11 +121,7 @@ class RedisFlexibleCacheService {
             def deserializedResult = redisFlexibleSerializer.deserialize(result)
 
             // if needed, reatach retrieved domain class instances to the session
-            if (reAttachToSession) {
-                return reHydrateIntoSession(deserializedResult)
-            }
-
-            return deserializedResult
+            return reHydrateIntoSessionIfNecessary(deserializedResult, reAttachToSession)
         } else { // if the result was not in the cache, cache it
 
             // get the TTL to use: ttl has the priority; if not set, try to use the group
@@ -141,13 +137,7 @@ class RedisFlexibleCacheService {
                 log.debug "cache miss: $key"
             }
             result = closure()
-            def serializedResult
-            if (reAttachToSession) {
-                def dataHolder = dehydratedBeforeSerialization(result)
-                serializedResult = redisFlexibleSerializer.serialize(dataHolder)
-            } else {
-                serializedResult = redisFlexibleSerializer.serialize(result)
-            }
+            def serializedResult = dehydratedBeforeSerializationIfNecessary(result, reAttachToSession)
             if (serializedResult) {
                 redisService.withRedis { Jedis redis ->
                     if (ttl > 0) {
@@ -171,20 +161,20 @@ class RedisFlexibleCacheService {
      *
      * @param obj the object to navigate
      */
-    private def dehydratedBeforeSerialization(def obj) {
+    private def dehydratedBeforeSerializationIfNecessary(def obj, boolean reAttachToSession) {
         def dataHolder
         if (obj instanceof Collection) {
             dataHolder = []
             dataHolder.addAll(obj.collect {
-                dehydratedBeforeSerialization(it)
+                dehydratedBeforeSerializationIfNecessary(it, reAttachToSession)
             })
         } else if (obj instanceof Map) {
             dataHolder = [:]
             obj.collectEntries { k, v ->
-                dataHolder.put(k: dehydratedBeforeSerialization(v))
+                dataHolder.put(k: dehydratedBeforeSerializationIfNecessary(v, reAttachToSession))
             }
         } else if (obj != null) {
-            if (grailsApplication.isDomainClass(obj.class)) {
+            if (grailsApplication.isDomainClass(obj.class) && reAttachToSession) {
                 dataHolder = new RedisFlexibleCacheValueWrapper(classType: obj.class, value: obj.id, isDomainClass: true)
             } else {
                 dataHolder = new RedisFlexibleCacheValueWrapper(classType: obj.class, value: obj, isDomainClass: false)
@@ -200,20 +190,20 @@ class RedisFlexibleCacheService {
      * @param obj the object to reattach (deserialized from cache)
      * @return the same object but with domain classes (if any) reattached to session
      */
-    private def reHydrateIntoSession(def obj) {
+    private def reHydrateIntoSessionIfNecessary(def obj, boolean reAttachToSession) {
         def dataHolder
         if (obj instanceof Collection) {
             dataHolder = []
             dataHolder.addAll(obj.collect {
-                reAttachToSessionIfDomainClass(it)
+                reAttachToSessionIfDomainClass(it, reAttachToSession)
             })
         } else if (obj instanceof Map) {
             dataHolder = [:]
             obj.collectEntries { k, v ->
-                dataHolder.put(k: reAttachToSessionIfDomainClass(v))
+                dataHolder.put(k: reAttachToSessionIfDomainClass(v, reAttachToSession))
             }
         } else if (obj != null) {
-            dataHolder = reAttachToSessionIfDomainClass(obj)
+            dataHolder = reAttachToSessionIfDomainClass(obj, reAttachToSession)
         }
         return dataHolder
     }
@@ -224,10 +214,10 @@ class RedisFlexibleCacheService {
      *
      * @param obj the object to reattach if it is a domain class.
      */
-    private def reAttachToSessionIfDomainClass(RedisFlexibleCacheValueWrapper obj) {
+    private def reAttachToSessionIfDomainClass(RedisFlexibleCacheValueWrapper obj, boolean reAttachToSession) {
         try {
             if (obj != null) {
-                if (obj.isDomainClass) {
+                if (obj.isDomainClass && reAttachToSession) {
                     def fresh = obj.classType.get(obj.value)
                     return fresh
                 } else {
