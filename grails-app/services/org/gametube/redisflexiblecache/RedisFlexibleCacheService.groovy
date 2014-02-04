@@ -196,12 +196,12 @@ class RedisFlexibleCacheService {
         if (obj instanceof Collection) {
             dataHolder = []
             dataHolder.addAll(obj.collect {
-                reAttachToSessionIfDomainClass(it, reAttachToSession)
+                reHydrateIntoSessionIfNecessary(it, reAttachToSession)
             })
         } else if (obj instanceof Map) {
             dataHolder = [:]
             obj.each { k, v ->
-                dataHolder.put(k, reAttachToSessionIfDomainClass(v, reAttachToSession))
+                dataHolder.put(k, reHydrateIntoSessionIfNecessary(v, reAttachToSession))
             }
         } else if (obj != null) {
             dataHolder = reAttachToSessionIfDomainClass(obj, reAttachToSession)
