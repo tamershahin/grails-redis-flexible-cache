@@ -20,6 +20,6 @@ grails.project.dependency.resolution = {
         }
 
         // redis support
-        compile ':redis:1.4.2'
+        compile ':redis:1.4.3'
     }
 }

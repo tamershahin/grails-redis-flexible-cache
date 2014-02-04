@@ -87,8 +87,8 @@ class RedisFlexibleCacheService {
      * The TTL value to be used is controlled by the @group (for using a preset) and @ttl (amount of seconds)
      * properties. If both provided and valid, only @ttl is taken into account. If none are provided nor valid,
      * the defaultTTL value configured in Config.groovy will be used (see documentation to set it properly).
-     * If @reAttachToSession is true the method will reattach domain classes instances retrieved from the cache to the
-     * current hibernate session.
+     * If @reAttachToSession is true the method will rehydrate domain classes instances using the id retrieved from the
+     * cache to the in order to have them fully connected to current hibernate session.
      *
      * @param keyString the key used to cache/retrieve the current value
      * @param group a key of the expireMap set in Config.groovy with preset expire times
@@ -122,7 +122,7 @@ class RedisFlexibleCacheService {
 
             // if needed, reatach retrieved domain class instances to the session
             if (reAttachToSession) {
-                recursiveReAttachToSession(deserializedResult)
+                return reHydrateIntoSession(deserializedResult)
             }
 
             return deserializedResult
@@ -141,13 +141,20 @@ class RedisFlexibleCacheService {
                 log.debug "cache miss: $key"
             }
             result = closure()
-            recursiveNavigateBeforeSerialize(result)
-            def serializedResult = redisFlexibleSerializer.serialize(result)
-            if (serializedResult) redisService.withRedis { Jedis redis ->
-                if (ttl > 0) {
-                    redis.setex(key, ttl, serializedResult)
-                } else {
-                    redis.set(key, serializedResult)
+            def serializedResult
+            if (reAttachToSession) {
+                def dataHolder = dehydratedBeforeSerialization(result)
+                serializedResult = redisFlexibleSerializer.serialize(dataHolder)
+            } else {
+                serializedResult = redisFlexibleSerializer.serialize(result)
+            }
+            if (serializedResult) {
+                redisService.withRedis { Jedis redis ->
+                    if (ttl > 0) {
+                        redis.setex(key, ttl, serializedResult)
+                    } else {
+                        redis.set(key, serializedResult)
+                    }
                 }
             }
             return result
@@ -155,74 +162,82 @@ class RedisFlexibleCacheService {
     }
 
     /**
-     * Recursively inspect results of the closure execution to cache. This allow all persistent properties in domain
-     * classes to cache to have a proper value (and not only the lazy loader handler) before serialization.
+     * Recursively inspect results of the closure execution to cache. The original result, that may contain Collection,
+     * Maps, Domain Classes or POGOs, are replaced with RedisFlexibleCacheValueWrappers instances. In case of Domain
+     * Classes the RedisFlexibleCacheValueWrappers instance holds its ids that will be used to retrieve the object from
+     * the DB.
+     * In all other cases the RedisFlexibleCacheValueWrappers instances will hold directly the value of results objects
+     * preserving their type.
+     *
      * @param obj the object to navigate
      */
-    private void recursiveNavigateBeforeSerialize(obj) {
+    private def dehydratedBeforeSerialization(def obj) {
+        def dataHolder
         if (obj instanceof Collection) {
-            obj.each {
-                recursiveNavigateBeforeSerialize(it)
-            }
+            dataHolder = []
+            dataHolder.addAll(obj.collect {
+                dehydratedBeforeSerialization(it)
+            })
         } else if (obj instanceof Map) {
-            obj.each { k, v ->
-                recursiveNavigateBeforeSerialize(v)
+            dataHolder = [:]
+            obj.collectEntries { k, v ->
+                dataHolder.put(k: dehydratedBeforeSerialization(v))
             }
         } else if (obj != null) {
-            obj.properties.each { k, v ->
-                if (v && grailsApplication.isDomainClass(v.class)) {
-                    recursiveNavigateBeforeSerialize(v)
-                }
+            if (grailsApplication.isDomainClass(obj.class)) {
+                dataHolder = new RedisFlexibleCacheValueWrapper(classType: obj.class, value: obj.id, isDomainClass: true)
+            } else {
+                dataHolder = new RedisFlexibleCacheValueWrapper(classType: obj.class, value: obj, isDomainClass: false)
             }
         }
+        return dataHolder
     }
 
     /**
-     * Recursively inspect results deserialized from cache and try to reattach domain class instances to the current
-     * hibernate session. Can handle Collections and Maps in search for domain classes.
+     * Recursively inspect results deserialized from cache and try to load domain classes instances from the current
+     * hibernate session using their deserialized ids. Can handle Collections and Maps in search for domain classes.
+     *
      * @param obj the object to reattach (deserialized from cache)
      * @return the same object but with domain classes (if any) reattached to session
      */
-    private recursiveReAttachToSession(obj) {
+    private def reHydrateIntoSession(def obj) {
+        def dataHolder
         if (obj instanceof Collection) {
-            obj.each {
-                recursiveReAttachToSession(it)
-            }
+            dataHolder = []
+            dataHolder.addAll(obj.collect {
+                reAttachToSessionIfDomainClass(it)
+            })
         } else if (obj instanceof Map) {
-            obj.each { k, v ->
-                recursiveReAttachToSession(v)
+            dataHolder = [:]
+            obj.collectEntries { k, v ->
+                dataHolder.put(k: reAttachToSessionIfDomainClass(v))
             }
-        } else {
-            reAttachToSessionIfPossible(obj)
+        } else if (obj != null) {
+            dataHolder = reAttachToSessionIfDomainClass(obj)
         }
+        return dataHolder
     }
 
     /**
-     * If @obj is a domain class try to load it from session if possible or force the reload from db.
-     * Do nothig if not a domain class
+     * If @obj is a wrapper containing domain classes then it try to load it from session/db.
+     * If @obj is not a wrapper for a domain class unwrap directly it returning obj.value.
+     *
      * @param obj the object to reattach if it is a domain class.
      */
-    private reAttachToSessionIfPossible(obj) {
+    private def reAttachToSessionIfDomainClass(RedisFlexibleCacheValueWrapper obj) {
         try {
-            if (obj != null && grailsApplication.isDomainClass(obj.class) && !obj.isAttached()) {
-                def fresh = obj.load(obj.id)
-                if (!fresh) {
-                    fresh = obj.refresh()
-                    if (log.isDebugEnabled()) {
-                        log.debug(obj.class.getName() + ' refreshed')
-                    }
+            if (obj != null) {
+                if (obj.isDomainClass) {
+                    def fresh = obj.classType.get(obj.value)
+                    return fresh
                 } else {
-                    if (log.isDebugEnabled()) {
-                        log.debug(obj.class.getName() + ' loaded')
-                    }
+                    return obj.value
                 }
-                obj = fresh
             }
+            return obj
         }
         catch (Exception e) {
-            if (log.isDebugEnabled()) {
-                log.debug("error attaching object to session. is it a domain class? ${e.getMessage()}")
-            }
+            log.error("error attaching object to session. is it a domain class?", e)
         }
 
     }

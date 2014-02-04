@@ -1,10 +1,19 @@
 Grails Flexible Cache Redis Plugin
 ==================================
 
-This plugin is an alternative to [redis-cache-plugin]. It gives the possibility to set the expire time in seconds for every cached key, and provides a service, annotations and injected methods to perform entry caching and eviction.
-The [redis-plugin] plugin also provides the possibility to set a TTL for a cached entry (using the provided `@Memoize` annotation), but it lacks the option to serialize any kind of Serializable objects: when you serialize grails domain classes only object ids are cached and then hydrated from main DB. With [redis-plugin] you save space in cache and you'll be 100% session-safe, but you will hit on the DB before saveing objects in cache *and* after reading from it.
+This plugin is an alternative to [redis-cache-plugin]. It is better that [redis-cache-plugin] because it gives the possibility to set the expire time in seconds
+for every cached key, and provides a service, annotations and injected methods to perform entry caching and eviction.
+The [redis-plugin] plugin also provides the possibility to set a TTL for a cached entry (using the provided `@Memoize` annotation), but it lacks the option to serialize
+any kind of Serializable objects: you are forced to be fully aware of what is being saved into cache each time (in [redis-plugin] you can save Domain object, list of
+Domain objects, List of POGOs, Scores, ecc, but not mix of that objects).
 
-With this plugin you save *everything* into cache, and this means that potentially a <b>lot</b> of data will go to redis, so pay attention to memory and bandwith consumption!
+With this plugin you save *everything* you need into cache:
+* if it is a domain object the plugin will save its id in the cache and rehydrate it at each cache hit.
+* if it is a plain object the plugin will cache it as it is.
+* if it is a Collection or a Map instance the plugin will iterate over it, preserving keys and/or order, and check what
+to save to the cache, for example you can have a Map with POGOs and Domain Classes and the plugin will save them accordingly.
+
+This means that potentially a <b>lot</b> of data will go to redis, so pay attention to memory and bandwidth consumption!
 
 This plugin is not an extension of [cache-plugin] plugin, it is far more simple and lighter at the same time.
 The [cache-plugin] gives a deep integration with grails Controller CoC mechanism, but I think it creates too much overhead sometimes.
@@ -16,7 +25,7 @@ Installation
 ------------
 Dependency :
 
-    compile ":redis-flexible-cache:0.2" 
+    compile ":redis-flexible-cache:0.3"
 
 In order to access the redis server where cached entries are stored, the plugin uses the configuration of the [redis-plugin]. 
 Typically, you'd have something like this in your `grails-app/conf/Config.groovy` file:
@@ -63,18 +72,32 @@ Plugin Usage
 
 ## Parameters ##
 
-As explained below, the plugin can be used in several ways (service, annotations, injected methods), but the set of parameters availble are always the same.
+As explained below, the plugin can be used in several ways (service, annotations, injected methods), but the set of parameters available are always the same.
 In case of storing/retrieving values from the cache the values are:
 
     key               - a String containing a unique key for the cached data.
     group             - a String containing a valid key present in the expireMap defined in Config.groovy.
     expire            - an Integer containing the expire time in seconds (takes preference from group if both are provided).  Will default to 300 (5 minutes) if no valid group or expire values are provided.  If you set 0 or a negative value, entries will never expire.
-    reAttachToSession - a Boolean indicating whether the plugin must try to reattach any domain class retrieved from cache to the current hibernate session.
+    reAttachToSession - a Boolean indicating whether the plugin must save the id of any Domain Classes found and rehydrate them when there is a cache hit.
 
 In case of evicting values from the cache the value is only:
 
     key               - a String containing a key to evict from the cache. You can insert also `*` and `?` wildcards to evict a set of keys as per Redis specification (`*`: 0 or more characters; `?`: exactly 1 character).
 
+## What to save ##
+Imagine the usual Book and Author classes example where Book have a nested Author property.
+If you set reAttachToSession to false, it doesn't mean that you cannot cache a Book instance. This means that you will have it deattached from the session: you can access to all property that are
+already accessed/not an other domain class. If you want to save db hit and perform quick caching you should load the object with eager switch on the fields you are sure you gonna access
+once the book is retrieved from cache, ex:
+
+ def list = redisFlexibleCacheService.doCache('some:key:2', 'someGroup', 120, false, {
+        return Book.list(fetch: [author: "eager"])
+    })
+ log.debug list.first().author // no exception thrown
+
+
+As rule of thumb use reAttachToSession=true when you want to cache the result of complex elaboration is a Domain class or a list of them and you need to 'navigate' them as fresh objects.
+Instead use reAttachToSession=false when you are sure you just need some plain fields in the domain classes saved and you need to save hits on the db.
 
 ### redisFlexibleCacheService Bean ###
 
@@ -106,7 +129,7 @@ Here is an example of usage:
 
     def index(){
       //params validation, ecc...
-      def res = cache group: 'longLasting', key: 'key:1', reAttachToSession: true, {
+      def res = redisFlexibleCache group: 'longLasting', key: 'key:1', reAttachToSession: true, {
                   def bookList = // long lasting algortitm that returns a collection of domain class instances
                   def calculated = // long lasting algoritm that returns an Integer  
                   [book: bookList, statistics: calculated]
@@ -167,6 +190,7 @@ Release Notes
 * 0.2.2 - released 20/12/2013 - fixed a bug
 * 0.2.3 - released 07/01/2014 - fixed a bug
 * 0.2.4 - released 13/01/2014 - fixed a bug
+* 0.3   - released 04/02/2014 - now based on [redis-plugin] 1.4.3 version instead of 1.4.2. Now the Domain classes are saved into redis only with their ids. At each Cache hit they will be rehidrated loading a fresh object from the DB.
 
 Credits
 =======
