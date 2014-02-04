@@ -25,7 +25,7 @@ Installation
 ------------
 Dependency :
 
-    compile ":redis-flexible-cache:0.3.1"
+    compile ":redis-flexible-cache:0.3.2"
 
 In order to access the redis server where cached entries are stored, the plugin uses the configuration of the [redis-plugin]. 
 Typically, you'd have something like this in your `grails-app/conf/Config.groovy` file:
@@ -190,7 +190,7 @@ Release Notes
 * 0.2.2 - released 20/12/2013 - fixed a bug
 * 0.2.3 - released 07/01/2014 - fixed a bug
 * 0.2.4 - released 13/01/2014 - fixed a bug
-* 0.3.1   - released 04/02/2014 - now based on [redis-plugin] 1.4.3 version instead of 1.4.2. Now the Domain classes are saved into redis only with their ids. At each Cache hit they will be rehidrated loading a fresh object from the DB.
+* 0.3.2   - released 04/02/2014 - now based on [redis-plugin] 1.4.3 version instead of 1.4.2. Now the Domain classes are saved into redis only with their ids. At each Cache hit they will be re-hydrated loading a fresh object from the DB.
 
 Credits
 =======
