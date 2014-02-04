@@ -172,7 +172,7 @@ class RedisFlexibleCacheService {
         } else if (obj instanceof Map) {
             dataHolder = [:]
             obj.collectEntries { k, v ->
-                dataHolder.put(k: dehydratedBeforeSerializationIfNecessary(v, reAttachToSession))
+                dataHolder.put(k, dehydratedBeforeSerializationIfNecessary(v, reAttachToSession))
             }
         } else if (obj != null) {
             if (grailsApplication.isDomainClass(obj.class) && reAttachToSession) {
