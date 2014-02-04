@@ -25,7 +25,7 @@ Installation
 ------------
 Dependency :
 
-    compile ":redis-flexible-cache:0.3"
+    compile ":redis-flexible-cache:0.3.1"
 
 In order to access the redis server where cached entries are stored, the plugin uses the configuration of the [redis-plugin]. 
 Typically, you'd have something like this in your `grails-app/conf/Config.groovy` file:
@@ -84,7 +84,7 @@ In case of evicting values from the cache the value is only:
 
     key               - a String containing a key to evict from the cache. You can insert also `*` and `?` wildcards to evict a set of keys as per Redis specification (`*`: 0 or more characters; `?`: exactly 1 character).
 
-## What to save ##
+## What to Cache ##
 Imagine the usual Book and Author classes example where Book have a nested Author property.
 If you set reAttachToSession to false, it doesn't mean that you cannot cache a Book instance. This means that you will have it deattached from the session: you can access to all property that are
 already accessed/not an other domain class. If you want to save db hit and perform quick caching you should load the object with eager switch on the fields you are sure you gonna access
@@ -93,7 +93,7 @@ once the book is retrieved from cache, ex:
  def list = redisFlexibleCacheService.doCache('some:key:2', 'someGroup', 120, false, {
         return Book.list(fetch: [author: "eager"])
     })
- log.debug list.first().author // no exception thrown
+ log.debug list.first().author.name // no exception thrown
 
 
 As rule of thumb use reAttachToSession=true when you want to cache the result of complex elaboration is a Domain class or a list of them and you need to 'navigate' them as fresh objects.
@@ -190,7 +190,7 @@ Release Notes
 * 0.2.2 - released 20/12/2013 - fixed a bug
 * 0.2.3 - released 07/01/2014 - fixed a bug
 * 0.2.4 - released 13/01/2014 - fixed a bug
-* 0.3   - released 04/02/2014 - now based on [redis-plugin] 1.4.3 version instead of 1.4.2. Now the Domain classes are saved into redis only with their ids. At each Cache hit they will be rehidrated loading a fresh object from the DB.
+* 0.3.1   - released 04/02/2014 - now based on [redis-plugin] 1.4.3 version instead of 1.4.2. Now the Domain classes are saved into redis only with their ids. At each Cache hit they will be rehidrated loading a fresh object from the DB.
 
 Credits
 =======
