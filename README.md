@@ -8,10 +8,10 @@ any kind of Serializable objects: you are forced to be fully aware of what is be
 Domain objects, List of POGOs, Scores, ecc, but not mix of that objects).
 
 With this plugin you save *everything* you need into cache:
-* if it is a domain object the plugin will save its id in the cache and rehydrate it at each cache hit.
+* if it is a domain object the plugin will save its id in the cache and rehydrate it (if requested) at each cache hit.
 * if it is a plain object the plugin will cache it as it is.
 * if it is a Collection or a Map instance the plugin will iterate over it, preserving keys and/or order, and check what
-to save to the cache, for example you can have a Map with POGOs and Domain Classes and the plugin will save them accordingly.
+to save to the cache. For example you can have a Map with POGOs and Domain Classes: the plugin will save them accordingly.
 
 This means that potentially a <b>lot</b> of data will go to redis, so pay attention to memory and bandwidth consumption!
 
@@ -85,15 +85,15 @@ In case of evicting values from the cache the value is only:
     key               - a String containing a key to evict from the cache. You can insert also `*` and `?` wildcards to evict a set of keys as per Redis specification (`*`: 0 or more characters; `?`: exactly 1 character).
 
 ## What to Cache ##
-Imagine the usual Book and Author classes example where Book have a nested Author property.
+There are some consideration data can help you to understand how to use in the optimal way this plugin (and skip a lot of hit con the DB). Imagine the usual Book and Author classes example where Book have a nested Author property.
 If you set reAttachToSession to false, it doesn't mean that you cannot cache a Book instance. This means that you will have it deattached from the session: you can access to all property that are
 already accessed/not an other domain class. If you want to save db hit and perform quick caching you should load the object with eager switch on the fields you are sure you gonna access
 once the book is retrieved from cache, ex:
 
- def list = redisFlexibleCacheService.doCache('some:key:2', 'someGroup', 120, false, {
+    def list = redisFlexibleCacheService.doCache('some:key:2', 'someGroup', 120, false, {
         return Book.list(fetch: [author: "eager"])
     })
- log.debug list.first().author.name // no exception thrown
+    log.debug list.first().author.name // no exception thrown
 
 
 As rule of thumb use reAttachToSession=true when you want to cache the result of complex elaboration is a Domain class or a list of them and you need to 'navigate' them as fresh objects.
