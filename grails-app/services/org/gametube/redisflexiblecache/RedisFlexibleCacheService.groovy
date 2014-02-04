@@ -171,7 +171,7 @@ class RedisFlexibleCacheService {
             })
         } else if (obj instanceof Map) {
             dataHolder = [:]
-            obj.collectEntries { k, v ->
+            obj.each { k, v ->
                 dataHolder.put(k, dehydratedBeforeSerializationIfNecessary(v, reAttachToSession))
             }
         } else if (obj != null) {
@@ -200,8 +200,8 @@ class RedisFlexibleCacheService {
             })
         } else if (obj instanceof Map) {
             dataHolder = [:]
-            obj.collectEntries { k, v ->
-                dataHolder.put(k: reAttachToSessionIfDomainClass(v, reAttachToSession))
+            obj.each { k, v ->
+                dataHolder.put(k, reAttachToSessionIfDomainClass(v, reAttachToSession))
             }
         } else if (obj != null) {
             dataHolder = reAttachToSessionIfDomainClass(obj, reAttachToSession)
