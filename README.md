@@ -191,6 +191,7 @@ Release Notes
 * 0.2.3 - released 07/01/2014 - fixed a bug
 * 0.2.4 - released 13/01/2014 - fixed a bug
 * 0.3.2   - released 04/02/2014 - now based on [redis-plugin] 1.4.3 version instead of 1.4.2. Now the Domain classes are saved into redis only with their ids. At each Cache hit they will be re-hydrated loading a fresh object from the DB.
+* 0.3.3   - released 04/02/2014 - now based on [redis-plugin] 1.5.0 version instead of 1.4.3.
 
 Credits
 =======
