@@ -1,7 +1,7 @@
 Grails Flexible Cache Redis Plugin
 ==================================
 
-This plugin is an alternative to [redis-cache-plugin]. It is better that [redis-cache-plugin] because it gives the possibility to set the expire time in seconds
+This plugin is an alternative to [redis-cache-plugin]. It is better than [redis-cache-plugin] because it gives the possibility to set the expire time in seconds
 for every cached key, and provides a service, annotations and injected methods to perform entry caching and eviction.
 The [redis-plugin] plugin also provides the possibility to set a TTL for a cached entry (using the provided `@Memoize` annotation), but it lacks the option to serialize
 any kind of Serializable objects: you are forced to be fully aware of what is being saved into cache each time (in [redis-plugin] you can save Domain object, list of
