@@ -85,7 +85,7 @@ In case of evicting values from the cache the value is only:
     key               - a String containing a key to evict from the cache. You can insert also `*` and `?` wildcards to evict a set of keys as per Redis specification (`*`: 0 or more characters; `?`: exactly 1 character).
 
 ## What to Cache ##
-There are some consideration data can help you to understand how to use in the optimal way this plugin (and skip a lot of hit con the DB). Imagine the usual Book and Author classes example where Book have a nested Author property.
+There are some consideration that can help you to understand how to use in the optimal way this plugin (and skip a lot of hit con the DB). Imagine the usual Book and Author classes example where Book have a nested Author property.
 If you set reAttachToSession to false, it doesn't mean that you cannot cache a Book instance. This means that you will have it deattached from the session: you can access to all property that are
 already accessed/not an other domain class. If you want to save db hit and perform quick caching you should load the object with eager switch on the fields you are sure you gonna access
 once the book is retrieved from cache, ex:
