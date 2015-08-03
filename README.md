@@ -177,7 +177,7 @@ If the compile succeeds but runtime fails or throws an exception, make sure the 
 If the compile does NOT succeed, check the stack trace as some validation is done on the AST transform for each annotation type. These conditions must be verified:
   * Required annotation properties are provided.
   * When using `reAttachToSession`, it is a valid Boolean.
-  * When using `expire`, it is a valid <b>String<b> with a numeric value.
+  * When using `expire`, it is a valid <b>String</b> with a numeric value.
   * When using `group`, it is a valid String.
   * When using `key`, it is a valid String.
 
